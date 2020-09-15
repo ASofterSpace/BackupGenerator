@@ -19,9 +19,7 @@ public class Database {
 
 	private JSON root;
 
-	/* here, put something like e.g.:
-	private List<Object> objects;
-	*/
+	private List<Target> targets;
 
 
 	public Database() {
@@ -36,16 +34,13 @@ public class Database {
 			System.exit(1);
 		}
 
-		/* here, put something like e.g.:
+		List<Record> targetRecs = root.getArray("targets");
 
-		List<Record> objectsRecs = root.getArray("objects");
+		this.targets = new ArrayList<>();
 
-		this.objects = new ArrayList<>();
-
-		for (Record rec : objectsRecs) {
-			objects.add(new Object(rec));
+		for (Record rec : targetRecs) {
+			targets.add(new Target(rec));
 		}
-		*/
 	}
 
 	public Record getRoot() {
@@ -56,16 +51,13 @@ public class Database {
 
 		root.makeObject();
 
-		/* here, put something like e.g.:
+		List<Record> targetRecs = new ArrayList<>();
 
-		List<Record> objectsRecs = new ArrayList<>();
-
-		for (Object obj : objects) {
-			objectsRecs.add(obj.toRecord());
+		for (Target obj : targets) {
+			targetRecs.add(obj.toRecord());
 		}
 
-		root.set("objects", objectsRecs);
-		*/
+		root.set("targets", targetRecs);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
