@@ -2,26 +2,33 @@
  * Unlicensed code created by A Softer Space, 2020
  * www.asofterspace.com/licenses/unlicense.txt
  */
-package com.asofterspace.backupGenerator;
+package com.asofterspace.backupGenerator.target;
 
 import com.asofterspace.toolbox.utils.Record;
 
 import java.util.List;
 
 
-public class Target {
+public class TargetDrive {
 
 	// name is e.g. "hdd_13_1", which can then be searched for on each drive to identify such a drive
-	private String name;
+	protected String name;
 
-	private List<String> actions;
+	protected List<String> actions;
 
 
-	public Target(Record rec) {
+	public TargetDrive(Record rec) {
 
 		this.name = rec.getString("name");
 
 		this.actions = rec.getArrayAsStringList("actions");
+	}
+
+	public TargetDrive(TargetDrive other) {
+
+		this.name = other.name;
+
+		this.actions = other.actions;
 	}
 
 	public Record toRecord() {
@@ -33,6 +40,10 @@ public class Target {
 		result.set("actions", actions);
 
 		return result;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 }

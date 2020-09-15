@@ -54,6 +54,12 @@ public class BackupGenerator {
 
 		database.save();
 
+		System.out.println("Starting backup ctrl...");
+
+		BackupCtrl backupCtrl = new BackupCtrl(database);
+
+		backupCtrl.start();
+
 		System.out.println("Done! Have a nice day! :)");
 	}
 
