@@ -14,7 +14,6 @@ TODO:
 >> ensure that also hidden files are copied
 >> also copy Downloads folder into the main of that date
 >> including movies into movie folder etc.
->> AFTER all else is done, rename the folder to current day
 >> oh, and make this configurable so Bene can also use it :)
 */
 public class BackupGenerator {
