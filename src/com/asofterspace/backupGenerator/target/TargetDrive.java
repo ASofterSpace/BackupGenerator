@@ -73,4 +73,8 @@ public class TargetDrive {
 		return name;
 	}
 
+	public List<Action> getActions() {
+		return actions;
+	}
+
 }

@@ -4,6 +4,7 @@
  */
 package com.asofterspace.backupGenerator;
 
+import com.asofterspace.backupGenerator.actions.Action;
 import com.asofterspace.backupGenerator.target.IdentifiedTarget;
 import com.asofterspace.backupGenerator.target.TargetDrive;
 import com.asofterspace.toolbox.io.Directory;
@@ -28,6 +29,15 @@ public class BackupCtrl {
 
 		for (IdentifiedTarget target : targets) {
 			System.out.println("Backing up to " + target + "...");
+			List<Action> actions = target.getActions();
+			for (Action action : actions) {
+				Directory destination = new Directory(action.getDestinationName());
+				List<String> sourcePaths = action.getSourcePaths();
+				int replicationFactor = action.getReplicationFactor();
+				for (String sourcePath : sourcePaths) {
+					startAction(action, destination, new Directory(sourcePath), replicationFactor);
+				}
+			}
 		}
 	}
 
@@ -49,5 +59,14 @@ public class BackupCtrl {
 
 		return result;
 	}
+
+	private void startAction(Action action, Directory destination, Directory source, int replicationFactor) {
+
+		System.out.println("Starting " + action + " from " + source.getAbsoluteDirname() + " to " +
+			destination.getAbsoluteDirname() + " with replication factor " + replicationFactor + "...");
+
+		// TODO
+	}
+
 
 }

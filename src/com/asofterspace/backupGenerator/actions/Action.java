@@ -51,4 +51,23 @@ public class Action {
 		return result;
 	}
 
+	public String getKind() {
+		return kind;
+	}
+
+	public String getDestinationName() {
+		return destinationName;
+	}
+
+	public List<String> getSourcePaths() {
+		return sourcePaths;
+	}
+
+	public int getReplicationFactor() {
+		if (replicationFactor == null) {
+			return 1;
+		}
+		return replicationFactor;
+	}
+
 }
