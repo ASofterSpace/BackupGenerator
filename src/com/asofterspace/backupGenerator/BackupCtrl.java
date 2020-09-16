@@ -90,7 +90,7 @@ public class BackupCtrl {
 			sep = " and ";
 		}
 
-		Directory datedDestinationToday = new Directory(destinationParent, source.getLocalDirname() +
+		Directory datedDestinationToday = new Directory(destinationParent, action.getDestinationName() +
 			" (" + StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ")");
 
 		System.out.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
