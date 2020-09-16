@@ -191,7 +191,20 @@ public class BackupCtrl {
 
 		if ("sync".equals(kind)) {
 			// in case of sync, delete files in the destination which are not in the source
-			// TODO - especially in case of having to merge several sources
+			// TODO in case of having to merge several sources
+			List<File> destChildren = curDestination.getAllFiles(recursively);
+			for (File destChild : destChildren) {
+				boolean deletedInSource = true;
+				for (File sourceFile : childFiles) {
+					if (sourceFile.getLocalFilename().equals(destChild.getLocalFilename())) {
+						deletedInSource = false;
+						break;
+					}
+				}
+				if (deletedInSource) {
+					destChild.delete();
+				}
+			}
 		}
 
 		List<Directory> childDirs = curSource.getAllDirectories(recursively);
@@ -201,7 +214,20 @@ public class BackupCtrl {
 
 		if ("sync".equals(kind)) {
 			// in case of sync, delete child directories in the destination which are not in the source
-			// TODO - especially in case of having to merge several sources
+			// TODO in case of having to merge several sources
+			List<Directory> destChildren = curDestination.getAllDirectories(recursively);
+			for (Directory destChild : destChildren) {
+				boolean deletedInSource = true;
+				for (Directory sourceDir : childDirs) {
+					if (sourceDir.getLocalDirname().equals(destChild.getLocalDirname())) {
+						deletedInSource = false;
+						break;
+					}
+				}
+				if (deletedInSource) {
+					destChild.delete();
+				}
+			}
 		}
 	}
 
