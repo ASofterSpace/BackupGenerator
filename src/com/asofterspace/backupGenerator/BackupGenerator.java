@@ -9,7 +9,6 @@ import com.asofterspace.toolbox.Utils;
 
 /*
 TODO:
->> take as input a folder
 >> remove all files which no longer exist
 >> copy over all files which have different size or different date
 >> ensure that also hidden files are copied
