@@ -14,10 +14,7 @@ TODO:
 >> ensure that also hidden files are copied
 >> also copy Downloads folder into the main of that date
 >> including movies into movie folder etc.
->> allow picking up dropped copying from last time this ran (without needing to write out anything, just do new list / compare)
 >> AFTER all else is done, rename the folder to current day
->> and then - update the meta-info in the /inf/ about the contents of this drive
-   (read from data on drive about which one it is, e.g. G:\hdd_14_1.txt)
 >> oh, and make this configurable so Bene can also use it :)
 */
 public class BackupGenerator {

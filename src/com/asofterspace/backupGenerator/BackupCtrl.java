@@ -9,6 +9,9 @@ import com.asofterspace.backupGenerator.target.IdentifiedTarget;
 import com.asofterspace.backupGenerator.target.TargetDrive;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
+import com.asofterspace.toolbox.io.TextFile;
+import com.asofterspace.toolbox.utils.DateUtils;
+import com.asofterspace.toolbox.utils.StrUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +33,28 @@ public class BackupCtrl {
 		for (IdentifiedTarget target : targets) {
 			System.out.println("Backing up to " + target + "...");
 			List<Action> actions = target.getActions();
+
+			StringBuilder logLines = new StringBuilder();
+			logLines.append(target.getName() + "\n\n");
+			logLines.append("Last backup on: " + DateUtils.serializeDateTime(DateUtils.now()) + "\n");
+			logLines.append("Then mounted on: " + target.getTargetDir().getAbsoluteDirname() + "\n");
+			logLines.append("\nBacked up folders:");
+
 			for (Action action : actions) {
 				Directory destination = new Directory(action.getDestinationName());
 				List<String> sourcePaths = action.getSourcePaths();
 				int replicationFactor = action.getReplicationFactor();
 				for (String sourcePath : sourcePaths) {
-					startAction(action, destination, new Directory(sourcePath), replicationFactor);
+					logLines.append("\n");
+					Directory source = new Directory(sourcePath);
+					String actionLog = startAction(action, destination, source, replicationFactor);
+					logLines.append(actionLog);
 				}
+			}
+
+			TextFile log = target.getLogfile();
+			if (log != null) {
+				log.saveContent(logLines);
 			}
 		}
 	}
@@ -60,12 +78,17 @@ public class BackupCtrl {
 		return result;
 	}
 
-	private void startAction(Action action, Directory destination, Directory source, int replicationFactor) {
+	private String startAction(Action action, Directory destination, Directory source, int replicationFactor) {
 
-		System.out.println("Starting " + action + " from " + source.getAbsoluteDirname() + " to " +
+		System.out.println("  Starting " + action.getKind() + " from " + source.getAbsoluteDirname() + " to " +
 			destination.getAbsoluteDirname() + " with replication factor " + replicationFactor + "...");
 
 		// TODO
+
+		Directory datedDestinationToday = new Directory(destination.getAbsoluteDirname() +
+			" (" + StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ")");
+
+		return datedDestinationToday.getLocalDirname();
 	}
 
 

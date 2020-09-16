@@ -77,4 +77,8 @@ public class TargetDrive {
 		return actions;
 	}
 
+	public TextFile getLogfile() {
+		return logfile;
+	}
+
 }

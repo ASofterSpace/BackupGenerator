@@ -29,4 +29,8 @@ public class IdentifiedTarget extends TargetDrive {
 		return name + " at " + targetDir.getAbsoluteDirname();
 	}
 
+	public Directory getTargetDir() {
+		return targetDir;
+	}
+
 }
