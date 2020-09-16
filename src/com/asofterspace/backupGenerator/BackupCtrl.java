@@ -47,12 +47,9 @@ public class BackupCtrl {
 				Directory destinationParent = target.getTargetDir();
 				List<String> sourcePaths = action.getSourcePaths();
 				int replicationFactor = action.getReplicationFactor();
-				for (String sourcePath : sourcePaths) {
-					logLines.append("\n");
-					Directory source = new Directory(sourcePath);
-					String actionLog = startAction(action, destinationParent, source, replicationFactor);
-					logLines.append(actionLog);
-				}
+				String actionLog = startAction(action, sourcePaths, destinationParent, replicationFactor);
+				logLines.append("\n");
+				logLines.append(actionLog);
 			}
 
 			TextFile log = target.getLogfile();
@@ -81,12 +78,22 @@ public class BackupCtrl {
 		return result;
 	}
 
-	private String startAction(Action action, Directory destinationParent, Directory source, int replicationFactor) {
+	private String startAction(Action action, List<String> sourcePaths, Directory destinationParent, int replicationFactor) {
+
+		Directory source = new Directory(sourcePaths.get(0));
+		List<Directory> sources = new ArrayList<>();
+		String fromStr = "";
+		String sep = "";
+		for (String sourcePath : sourcePaths) {
+			sources.add(new Directory(sourcePath));
+			fromStr += sep + sourcePath;
+			sep = " and ";
+		}
 
 		Directory datedDestinationToday = new Directory(destinationParent, source.getLocalDirname() +
 			" (" + StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ")");
 
-		System.out.println("  Starting " + action.getKind() + " from " + source.getAbsoluteDirname() + " to " +
+		System.out.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
 			datedDestinationToday.getAbsoluteDirname() + " with replication factor " + replicationFactor + "...");
 
 		boolean recursively = false;
@@ -149,7 +156,7 @@ public class BackupCtrl {
 					" (" + action.getKind() + " unknown!)";
 		}
 
-		performAction(action.getKind(), source, actualDestination, "");
+		performAction(action.getKind(), sources, actualDestination, "");
 
 		// once all is done, rename the folder we are backuping into to the current date
 		actualDestination.rename(datedDestinationToday.getLocalDirname());
@@ -157,16 +164,22 @@ public class BackupCtrl {
 		return datedDestinationToday.getLocalDirname();
 	}
 
-	private void performAction(String kind, Directory source, Directory destination, String curRelPath) {
+	private void performAction(String kind, List<Directory> sources, Directory destination, String curRelPath) {
 
 		boolean recursively = false;
 
-		Directory curSource = new Directory(source, curRelPath);
+		List<Directory> curSources = new ArrayList<>();
+		for (Directory source : sources) {
+			curSources.add(new Directory(source, curRelPath));
+		}
 		Directory curDestination = new Directory(destination, curRelPath);
 
 		curDestination.create();
 
-		List<File> childFiles = curSource.getAllFiles(recursively);
+		List<File> childFiles = new ArrayList<>();
+		for (Directory curSource : curSources) {
+			childFiles.addAll(curSource.getAllFiles(recursively));
+		}
 		for (File sourceFile : childFiles) {
 			File destFile = new File(curDestination, sourceFile.getLocalFilename());
 			// the backed up file already exists...
@@ -191,7 +204,6 @@ public class BackupCtrl {
 
 		if ("sync".equals(kind)) {
 			// in case of sync, delete files in the destination which are not in the source
-			// TODO in case of having to merge several sources
 			List<File> destChildren = curDestination.getAllFiles(recursively);
 			for (File destChild : destChildren) {
 				boolean deletedInSource = true;
@@ -207,14 +219,16 @@ public class BackupCtrl {
 			}
 		}
 
-		List<Directory> childDirs = curSource.getAllDirectories(recursively);
+		List<Directory> childDirs = new ArrayList<>();
+		for (Directory curSource : curSources) {
+			childDirs.addAll(curSource.getAllDirectories(recursively));
+		}
 		for (Directory childDir : childDirs) {
-			performAction(kind, source, destination, curRelPath + childDir.getLocalDirname() + "/");
+			performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/");
 		}
 
 		if ("sync".equals(kind)) {
 			// in case of sync, delete child directories in the destination which are not in the source
-			// TODO in case of having to merge several sources
 			List<Directory> destChildren = curDestination.getAllDirectories(recursively);
 			for (Directory destChild : destChildren) {
 				boolean deletedInSource = true;
