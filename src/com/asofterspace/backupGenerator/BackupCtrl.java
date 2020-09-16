@@ -24,6 +24,8 @@ public class BackupCtrl {
 
 	private Database database;
 
+	private int copyCounter = 0;
+
 
 	public BackupCtrl(Database database) {
 		this.database = database;
@@ -198,8 +200,15 @@ public class BackupCtrl {
 					}
 				}
 			}
+
 			// actually backup this file
 			sourceFile.copyToDisk(destFile);
+			copyCounter++;
+			if (copyCounter > 1024) {
+				copyCounter = 0;
+				System.out.println("    copying " + sourceFile.getAbsoluteFilename() + " to " +
+					destFile.getAbsoluteFilename());
+			}
 		}
 
 		if ("sync".equals(kind)) {
