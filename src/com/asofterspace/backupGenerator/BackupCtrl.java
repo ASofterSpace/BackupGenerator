@@ -24,6 +24,7 @@ public class BackupCtrl {
 
 	private Database database;
 
+	private int checkCounter = 0;
 	private int copyCounter = 0;
 
 
@@ -196,6 +197,12 @@ public class BackupCtrl {
 					// ... and the reported sizes are the same...
 					if ((sourceSize != null) && (destSize != null) && ((long) sourceSize == (long) destSize)) {
 						// ... skip backing up this file!
+						checkCounter++;
+						if (checkCounter > 2048) {
+							checkCounter = 0;
+							System.out.println("    checking " + sourceFile.getAbsoluteFilename() +
+								"... identical to " + destFile.getAbsoluteFilename());
+						}
 						continue;
 					}
 				}

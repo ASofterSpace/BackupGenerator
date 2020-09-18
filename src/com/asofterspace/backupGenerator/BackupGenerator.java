@@ -7,20 +7,11 @@ package com.asofterspace.backupGenerator;
 import com.asofterspace.toolbox.Utils;
 
 
-/*
-TODO:
->> remove all files which no longer exist
->> copy over all files which have different size or different date
->> ensure that also hidden files are copied
->> also copy Downloads folder into the main of that date
->> including movies into movie folder etc.
->> oh, and make this configurable so Bene can also use it :)
-*/
 public class BackupGenerator {
 
 	public final static String PROGRAM_TITLE = "BackupGenerator";
-	public final static String VERSION_NUMBER = "0.0.0.1(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "15. Sep 2020 - 15. Sep 2020";
+	public final static String VERSION_NUMBER = "0.0.0.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "15. Sep 2020 - 16. Sep 2020";
 
 	public static void main(String[] args) {
 
