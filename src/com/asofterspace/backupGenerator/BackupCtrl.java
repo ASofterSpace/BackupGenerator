@@ -127,7 +127,7 @@ public class BackupCtrl {
 
 		// removing oldest backups if there are too many
 		while (existingDestDirs.size() > replicationFactor) {
-			System.out.println("  Removing " + existingDestDirs.get(0) + "...");
+			System.out.println("  Removing " + existingDestDirs.get(0).getAbsoluteDirname() + "...");
 			existingDestDirs.get(0).delete();
 			existingDestDirs.remove(0);
 		}
