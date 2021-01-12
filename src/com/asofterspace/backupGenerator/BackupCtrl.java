@@ -40,23 +40,46 @@ public class BackupCtrl {
 			System.out.println("Backing up to " + target + "...");
 			List<Action> actions = target.getActions();
 
+			Date backupStartTime = DateUtils.now();
+
 			StringBuilder logLines = new StringBuilder();
-			logLines.append(target.getName() + "\n\n");
-			logLines.append("Last backup on: " + DateUtils.serializeDateTime(DateUtils.now()) + "\n");
-			logLines.append("Then mounted on: " + target.getTargetDir().getAbsoluteDirname() + "\n");
-			logLines.append("\nBacked up folders:");
+			TextFile log = target.getLogfile();
+			if (log != null) {
+				logLines.append(target.getName() + "\n\n");
+				logLines.append("Last backup on: " + DateUtils.serializeDateTime(backupStartTime) + " (still ongoing)\n");
+				logLines.append("Then mounted on: " + target.getTargetDir().getAbsoluteDirname() + "\n");
+
+				log.saveContent(logLines);
+
+				logLines.append("\nBacked up folders:");
+			}
+
+			List<String> actionLogs = new ArrayList<>();
 
 			for (Action action : actions) {
 				Directory destinationParent = target.getTargetDir();
 				List<String> sourcePaths = action.getSourcePaths();
 				int replicationFactor = action.getReplicationFactor();
 				String actionLog = startAction(action, sourcePaths, destinationParent, replicationFactor);
-				logLines.append("\n");
-				logLines.append(actionLog);
+				if (log != null) {
+					logLines.append("\n");
+					logLines.append(actionLog);
+					log.saveContent(logLines);
+					actionLogs.add(actionLog);
+				}
 			}
 
-			TextFile log = target.getLogfile();
 			if (log != null) {
+				logLines = new StringBuilder();
+				logLines.append(target.getName() + "\n\n");
+				logLines.append("Last backup on: " + DateUtils.serializeDateTime(backupStartTime) + " - " +
+					DateUtils.serializeDateTime(DateUtils.now()) + "\n");
+				logLines.append("Then mounted on: " + target.getTargetDir().getAbsoluteDirname() + "\n");
+				logLines.append("\nBacked up folders:");
+				for (String actionLogLine : actionLogs) {
+					logLines.append("\n");
+					logLines.append(actionLogLine);
+				}
 				log.saveContent(logLines);
 			}
 		}
