@@ -12,6 +12,7 @@ import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.utils.StrUtils;
+import com.asofterspace.toolbox.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +27,8 @@ public class BackupCtrl {
 
 	private int checkCounter = 0;
 	private int copyCounter = 0;
+
+	private boolean paused = false;
 
 
 	public BackupCtrl(Database database) {
@@ -207,6 +210,10 @@ public class BackupCtrl {
 			childFiles.addAll(curSource.getAllFiles(recursively));
 		}
 		for (File sourceFile : childFiles) {
+			while (paused) {
+				Utils.sleep(1000);
+			}
+
 			File destFile = new File(curDestination, sourceFile.getLocalFilename());
 			// the backed up file already exists...
 			if (destFile.exists()) {
@@ -282,6 +289,14 @@ public class BackupCtrl {
 				}
 			}
 		}
+	}
+
+	public void pause() {
+		paused = true;
+	}
+
+	public void resume() {
+		paused = false;
 	}
 
 

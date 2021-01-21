@@ -4,14 +4,23 @@
  */
 package com.asofterspace.backupGenerator;
 
+import com.asofterspace.backupGenerator.gui.GUI;
+import com.asofterspace.toolbox.configuration.ConfigFile;
+import com.asofterspace.toolbox.io.JSON;
+import com.asofterspace.toolbox.io.JsonParseException;
 import com.asofterspace.toolbox.Utils;
+
+import javax.swing.SwingUtilities;
 
 
 public class BackupGenerator {
 
 	public final static String PROGRAM_TITLE = "BackupGenerator";
-	public final static String VERSION_NUMBER = "0.0.0.3(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "15. September 2020 - 12. January 2021";
+	public final static String VERSION_NUMBER = "0.0.0.4(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "15. September 2020 - 21. January 2021";
+
+	private static ConfigFile config;
+
 
 	public static void main(String[] args) {
 
@@ -40,13 +49,31 @@ public class BackupGenerator {
 
 		database.save();
 
-		System.out.println("Starting backup ctrl...");
+		System.out.println("Creating backup ctrl...");
 
 		BackupCtrl backupCtrl = new BackupCtrl(database);
 
-		backupCtrl.start();
+		System.out.println("Starting GUI...");
 
-		System.out.println("Done! Have a nice day! :)");
+		try {
+			// load config
+			config = new ConfigFile("settings", true);
+
+			// create a default config file, if necessary
+			if (config.getAllContents().isEmpty()) {
+				config.setAllContents(new JSON("{}"));
+			}
+		} catch (JsonParseException e) {
+			System.err.println("Loading the settings failed:");
+			System.err.println(e);
+			System.exit(1);
+		}
+
+		SwingUtilities.invokeLater(new GUI(backupCtrl, config));
+
+		System.out.println("Starting backup ctrl...");
+
+		backupCtrl.start();
 	}
 
 }

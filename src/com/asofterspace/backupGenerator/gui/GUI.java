@@ -1,0 +1,209 @@
+/**
+ * Unlicensed code created by A Softer Space, 2021
+ * www.asofterspace.com/licenses/unlicense.txt
+ */
+package com.asofterspace.backupGenerator.gui;
+
+import com.asofterspace.backupGenerator.BackupCtrl;
+import com.asofterspace.toolbox.configuration.ConfigFile;
+import com.asofterspace.toolbox.gui.Arrangement;
+import com.asofterspace.toolbox.gui.GuiUtils;
+import com.asofterspace.toolbox.gui.MainWindow;
+import com.asofterspace.toolbox.Utils;
+
+import java.awt.BorderLayout;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
+import java.awt.GridBagLayout;
+import java.awt.Point;
+import java.io.IOException;
+import java.util.List;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+
+
+public class GUI extends MainWindow {
+
+	private final static String CONFIG_KEY_WIDTH = "mainFrameWidth";
+	private final static String CONFIG_KEY_HEIGHT = "mainFrameHeight";
+	private final static String CONFIG_KEY_LEFT = "mainFrameLeft";
+	private final static String CONFIG_KEY_TOP = "mainFrameTop";
+
+	private BackupCtrl backupCtrl;
+
+	private JPanel mainPanelRight;
+
+	private JPanel searchPanel;
+	private JTextField searchField;
+
+	private JMenuItem close;
+
+	private ConfigFile configuration;
+
+
+	public GUI(BackupCtrl backupCtrl, ConfigFile config) {
+
+		this.backupCtrl = backupCtrl;
+
+		this.configuration = config;
+	}
+
+	@Override
+	public void run() {
+
+		super.create();
+
+		refreshTitleBar();
+
+		createMenu(mainFrame);
+
+		createMainPanel(mainFrame);
+
+		// do not call super.show, as we are doing things a little bit
+		// differently around here (including restoring from previous
+		// position...)
+		// super.show();
+
+		final Integer lastWidth = configuration.getInteger(CONFIG_KEY_WIDTH, -1);
+		final Integer lastHeight = configuration.getInteger(CONFIG_KEY_HEIGHT, -1);
+		final Integer lastLeft = configuration.getInteger(CONFIG_KEY_LEFT, -1);
+		final Integer lastTop = configuration.getInteger(CONFIG_KEY_TOP, -1);
+
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				// Stage everything to be shown
+				mainFrame.pack();
+
+				// Actually display the whole jazz
+				mainFrame.setVisible(true);
+
+				if ((lastWidth < 1) || (lastHeight < 1)) {
+					GuiUtils.maximizeWindow(mainFrame);
+				} else {
+					mainFrame.setSize(lastWidth, lastHeight);
+
+					mainFrame.setPreferredSize(new Dimension(lastWidth, lastHeight));
+
+					mainFrame.setLocation(new Point(lastLeft, lastTop));
+				}
+
+				mainFrame.addComponentListener(new ComponentAdapter() {
+					public void componentResized(ComponentEvent componentEvent) {
+						configuration.set(CONFIG_KEY_WIDTH, mainFrame.getWidth());
+						configuration.set(CONFIG_KEY_HEIGHT, mainFrame.getHeight());
+					}
+
+					public void componentMoved(ComponentEvent componentEvent) {
+						configuration.set(CONFIG_KEY_LEFT, mainFrame.getLocation().x);
+						configuration.set(CONFIG_KEY_TOP, mainFrame.getLocation().y);
+					}
+				});
+			}
+		});
+	}
+
+	private JMenuBar createMenu(JFrame parent) {
+
+		JMenuBar menu = new JMenuBar();
+
+		JMenu file = new JMenu("Backup");
+		menu.add(file);
+
+		JMenuItem pause = new JMenuItem("Pause");
+		pause.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				backupCtrl.pause();
+			}
+		});
+		file.add(pause);
+
+		JMenuItem resume = new JMenuItem("Resume");
+		resume.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				backupCtrl.resume();
+			}
+		});
+		file.add(resume);
+
+		// file.addSeparator();
+
+		close = new JMenuItem("Exit");
+		close.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, ActionEvent.ALT_MASK));
+		close.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		file.add(close);
+
+		JMenu huh = new JMenu("?");
+
+		JMenuItem openConfigPath = new JMenuItem("Open Config Path");
+		openConfigPath.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Desktop.getDesktop().open(configuration.getParentDirectory().getJavaFile());
+				} catch (IOException ex) {
+					// do nothing
+				}
+			}
+		});
+		huh.add(openConfigPath);
+
+		JMenuItem about = new JMenuItem("About");
+		about.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String aboutMessage = "This is the " + Utils.getProgramTitle() + ".\n" +
+					"Version: " + Utils.getVersionNumber() + " (" + Utils.getVersionDate() + ")\n" +
+					"Brought to you by: A Softer Space";
+				JOptionPane.showMessageDialog(mainFrame, aboutMessage, "About", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
+		huh.add(about);
+		menu.add(huh);
+
+		parent.setJMenuBar(menu);
+
+		return menu;
+	}
+
+	private JPanel createMainPanel(JFrame parent) {
+
+		JPanel mainPanel = new JPanel();
+		mainPanel.setPreferredSize(new Dimension(800, 500));
+		GridBagLayout mainPanelLayout = new GridBagLayout();
+		mainPanel.setLayout(mainPanelLayout);
+
+		JLabel currentDirectoryLabel = new JLabel("Current Directory");
+
+		mainPanel.add(currentDirectoryLabel, new Arrangement(0, 0, 1.0, 1.0));
+
+		parent.add(mainPanel, BorderLayout.CENTER);
+
+		return mainPanel;
+	}
+
+	private void refreshTitleBar() {
+		mainFrame.setTitle(Utils.getProgramTitle());
+	}
+
+}
