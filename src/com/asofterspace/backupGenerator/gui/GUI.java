@@ -5,6 +5,7 @@
 package com.asofterspace.backupGenerator.gui;
 
 import com.asofterspace.backupGenerator.BackupCtrl;
+import com.asofterspace.backupGenerator.output.OutputUtils;
 import com.asofterspace.toolbox.configuration.ConfigFile;
 import com.asofterspace.toolbox.gui.Arrangement;
 import com.asofterspace.toolbox.gui.GuiUtils;
@@ -141,7 +142,18 @@ public class GUI extends MainWindow {
 		});
 		file.add(resume);
 
-		// file.addSeparator();
+		file.addSeparator();
+
+		JMenuItem cancel = new JMenuItem("Cancel");
+		cancel.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				backupCtrl.cancel();
+			}
+		});
+		file.add(cancel);
+
+		file.addSeparator();
 
 		close = new JMenuItem("Exit");
 		close.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, ActionEvent.ALT_MASK));
@@ -196,6 +208,12 @@ public class GUI extends MainWindow {
 		JLabel currentDirectoryLabel = new JLabel("Current Directory");
 
 		mainPanel.add(currentDirectoryLabel, new Arrangement(0, 0, 1.0, 1.0));
+
+		JLabel outputLabel = new JLabel("Output");
+
+		mainPanel.add(outputLabel, new Arrangement(0, 1, 1.0, 1.0));
+
+		OutputUtils.setOutputLabel(outputLabel);
 
 		parent.add(mainPanel, BorderLayout.CENTER);
 

@@ -5,6 +5,7 @@
 package com.asofterspace.backupGenerator;
 
 import com.asofterspace.backupGenerator.actions.Action;
+import com.asofterspace.backupGenerator.output.OutputUtils;
 import com.asofterspace.backupGenerator.target.IdentifiedTarget;
 import com.asofterspace.backupGenerator.target.TargetDrive;
 import com.asofterspace.toolbox.io.Directory;
@@ -28,7 +29,8 @@ public class BackupCtrl {
 	private int checkCounter = 0;
 	private int copyCounter = 0;
 
-	private boolean paused = false;
+	private volatile boolean paused = false;
+	private volatile boolean cancelled = false;
 
 
 	public BackupCtrl(Database database) {
@@ -37,10 +39,18 @@ public class BackupCtrl {
 
 	public void start() {
 
+		cancelled = false;
+		paused = false;
+
 		List<IdentifiedTarget> targets = identifyTargets();
 
 		for (IdentifiedTarget target : targets) {
-			System.out.println("Backing up to " + target + "...");
+
+			if (cancelled) {
+				return;
+			}
+
+			OutputUtils.println("Backing up to " + target + "...");
 			List<Action> actions = target.getActions();
 
 			Date backupStartTime = DateUtils.now();
@@ -64,6 +74,11 @@ public class BackupCtrl {
 				List<String> sourcePaths = action.getSourcePaths();
 				int replicationFactor = action.getReplicationFactor();
 				String actionLog = startAction(action, sourcePaths, destinationParent, replicationFactor);
+
+				if (cancelled) {
+					return;
+				}
+
 				if (log != null) {
 					logLines.append("\n");
 					logLines.append(actionLog);
@@ -109,6 +124,10 @@ public class BackupCtrl {
 
 	private String startAction(Action action, List<String> sourcePaths, Directory destinationParent, int replicationFactor) {
 
+		if (cancelled) {
+			return null;
+		}
+
 		Directory source = new Directory(sourcePaths.get(0));
 		List<Directory> sources = new ArrayList<>();
 		String fromStr = "";
@@ -122,7 +141,7 @@ public class BackupCtrl {
 		Directory datedDestinationToday = new Directory(destinationParent, action.getDestinationName() +
 			" (" + StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ")");
 
-		System.out.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
+		OutputUtils.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
 			datedDestinationToday.getAbsoluteDirname() + " with replication factor " + replicationFactor + "...");
 
 		boolean recursively = false;
@@ -148,12 +167,12 @@ public class BackupCtrl {
 			}
 		});
 
-		System.out.println("  Found " + existingDestDirs.size() + " existing backups, expecting " +
+		OutputUtils.println("  Found " + existingDestDirs.size() + " existing backups, expecting " +
 			replicationFactor + "...");
 
 		// removing oldest backups if there are too many
 		while (existingDestDirs.size() > replicationFactor) {
-			System.out.println("  Removing " + existingDestDirs.get(0).getAbsoluteDirname() + "...");
+			OutputUtils.println("  Removing " + existingDestDirs.get(0).getAbsoluteDirname() + "...");
 			existingDestDirs.get(0).delete();
 			existingDestDirs.remove(0);
 		}
@@ -180,12 +199,16 @@ public class BackupCtrl {
 			case "writeonly":
 				break;
 			default:
-				System.out.println("  UNKNOWN ACTION KIND " + action.getKind() + "!");
+				OutputUtils.println("  UNKNOWN ACTION KIND " + action.getKind() + "!");
 				return destinationParent.getAbsoluteDirname() + "/" + source.getLocalDirname() +
 					" (" + action.getKind() + " unknown!)";
 		}
 
 		performAction(action.getKind(), sources, actualDestination, "");
+
+		if (cancelled) {
+			return null;
+		}
 
 		// once all is done, rename the folder we are backuping into to the current date
 		actualDestination.rename(datedDestinationToday.getLocalDirname());
@@ -194,6 +217,8 @@ public class BackupCtrl {
 	}
 
 	private void performAction(String kind, List<Directory> sources, Directory destination, String curRelPath) {
+
+		OutputUtils.println("Checking " + curRelPath + "...");
 
 		boolean recursively = false;
 
@@ -214,6 +239,10 @@ public class BackupCtrl {
 				Utils.sleep(1000);
 			}
 
+			if (cancelled) {
+				return;
+			}
+
 			File destFile = new File(curDestination, sourceFile.getLocalFilename());
 			// the backed up file already exists...
 			if (destFile.exists()) {
@@ -230,7 +259,7 @@ public class BackupCtrl {
 						checkCounter++;
 						if (checkCounter > 2048) {
 							checkCounter = 0;
-							System.out.println("    checking " + sourceFile.getAbsoluteFilename() +
+							OutputUtils.println("    checking " + sourceFile.getAbsoluteFilename() +
 								"... identical to " + destFile.getAbsoluteFilename());
 						}
 						continue;
@@ -243,7 +272,7 @@ public class BackupCtrl {
 			copyCounter++;
 			if (copyCounter > 1024) {
 				copyCounter = 0;
-				System.out.println("    copying " + sourceFile.getAbsoluteFilename() + " to " +
+				OutputUtils.println("    copying " + sourceFile.getAbsoluteFilename() + " to " +
 					destFile.getAbsoluteFilename());
 			}
 		}
@@ -252,6 +281,15 @@ public class BackupCtrl {
 			// in case of sync, delete files in the destination which are not in the source
 			List<File> destChildren = curDestination.getAllFiles(recursively);
 			for (File destChild : destChildren) {
+
+				while (paused) {
+					Utils.sleep(1000);
+				}
+
+				if (cancelled) {
+					return;
+				}
+
 				boolean deletedInSource = true;
 				for (File sourceFile : childFiles) {
 					if (sourceFile.getLocalFilename().equals(destChild.getLocalFilename())) {
@@ -277,6 +315,15 @@ public class BackupCtrl {
 			// in case of sync, delete child directories in the destination which are not in the source
 			List<Directory> destChildren = curDestination.getAllDirectories(recursively);
 			for (Directory destChild : destChildren) {
+
+				while (paused) {
+					Utils.sleep(1000);
+				}
+
+				if (cancelled) {
+					return;
+				}
+
 				boolean deletedInSource = true;
 				for (Directory sourceDir : childDirs) {
 					if (sourceDir.getLocalDirname().equals(destChild.getLocalDirname())) {
@@ -289,6 +336,11 @@ public class BackupCtrl {
 				}
 			}
 		}
+	}
+
+	public void cancel() {
+		cancelled = true;
+		paused = false;
 	}
 
 	public void pause() {

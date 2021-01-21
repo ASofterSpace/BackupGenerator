@@ -5,6 +5,7 @@
 package com.asofterspace.backupGenerator;
 
 import com.asofterspace.backupGenerator.gui.GUI;
+import com.asofterspace.backupGenerator.output.OutputUtils;
 import com.asofterspace.toolbox.configuration.ConfigFile;
 import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonParseException;
@@ -31,29 +32,29 @@ public class BackupGenerator {
 
 		if (args.length > 0) {
 			if (args[0].equals("--version")) {
-				System.out.println(Utils.getFullProgramIdentifierWithDate());
+				OutputUtils.println(Utils.getFullProgramIdentifierWithDate());
 				return;
 			}
 
 			if (args[0].equals("--version_for_zip")) {
-				System.out.println("version " + Utils.getVersionNumber());
+				OutputUtils.println("version " + Utils.getVersionNumber());
 				return;
 			}
 		}
 
-		System.out.println("Loading database...");
+		OutputUtils.println("Loading database...");
 
 		Database database = new Database();
 
-		System.out.println("Saving database...");
+		OutputUtils.println("Saving database...");
 
 		database.save();
 
-		System.out.println("Creating backup ctrl...");
+		OutputUtils.println("Creating backup ctrl...");
 
 		BackupCtrl backupCtrl = new BackupCtrl(database);
 
-		System.out.println("Starting GUI...");
+		OutputUtils.println("Starting GUI...");
 
 		try {
 			// load config
@@ -71,7 +72,7 @@ public class BackupGenerator {
 
 		SwingUtilities.invokeLater(new GUI(backupCtrl, config));
 
-		System.out.println("Starting backup ctrl...");
+		OutputUtils.println("Starting backup ctrl...");
 
 		backupCtrl.start();
 	}
