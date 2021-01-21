@@ -218,7 +218,7 @@ public class BackupCtrl {
 
 	private void performAction(String kind, List<Directory> sources, Directory destination, String curRelPath) {
 
-		OutputUtils.println("Checking " + curRelPath + "...");
+		OutputUtils.printDir("Checking " + curRelPath + "...");
 
 		boolean recursively = false;
 

@@ -10,6 +10,7 @@ import com.asofterspace.toolbox.configuration.ConfigFile;
 import com.asofterspace.toolbox.gui.Arrangement;
 import com.asofterspace.toolbox.gui.GuiUtils;
 import com.asofterspace.toolbox.gui.MainWindow;
+import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.Utils;
 
 import java.awt.BorderLayout;
@@ -32,7 +33,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
@@ -44,14 +44,13 @@ public class GUI extends MainWindow {
 	private final static String CONFIG_KEY_LEFT = "mainFrameLeft";
 	private final static String CONFIG_KEY_TOP = "mainFrameTop";
 
+	private final static String CUR_DIR_BASE_TEXT = "Current Directory (shown here if turned on in settings)";
+
 	private BackupCtrl backupCtrl;
 
-	private JPanel mainPanelRight;
-
-	private JPanel searchPanel;
-	private JTextField searchField;
-
 	private JMenuItem close;
+
+	private JLabel currentDirectoryLabel;
 
 	private ConfigFile configuration;
 
@@ -165,6 +164,22 @@ public class GUI extends MainWindow {
 		});
 		file.add(close);
 
+		JMenu settings = new JMenu("Settings");
+		menu.add(settings);
+
+		JMenuItem toggleShowingCurDir = new JMenuItem("Toggle Showing Current Directory");
+		toggleShowingCurDir.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				boolean newVal = !OutputUtils.getPrintDirectories();
+				OutputUtils.setPrintDirectories(newVal);
+				if (!newVal) {
+					currentDirectoryLabel.setText(CUR_DIR_BASE_TEXT);
+				}
+			}
+		});
+		settings.add(toggleShowingCurDir);
+
 		JMenu huh = new JMenu("?");
 
 		JMenuItem openConfigPath = new JMenuItem("Open Config Path");
@@ -205,9 +220,11 @@ public class GUI extends MainWindow {
 		GridBagLayout mainPanelLayout = new GridBagLayout();
 		mainPanel.setLayout(mainPanelLayout);
 
-		JLabel currentDirectoryLabel = new JLabel("Current Directory");
+		currentDirectoryLabel = new JLabel(CUR_DIR_BASE_TEXT);
 
 		mainPanel.add(currentDirectoryLabel, new Arrangement(0, 0, 1.0, 1.0));
+
+		OutputUtils.setCurrentDirectoryLabel(currentDirectoryLabel);
 
 		JLabel outputLabel = new JLabel("Output");
 
