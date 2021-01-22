@@ -226,7 +226,7 @@ public class GUI extends MainWindow {
 
 		OutputUtils.setCurrentDirectoryLabel(currentDirectoryLabel);
 
-		JLabel outputLabel = new JLabel("Output");
+		JLabel outputLabel = new JLabel("(output will appear here)");
 
 		mainPanel.add(outputLabel, new Arrangement(0, 1, 1.0, 1.0));
 
