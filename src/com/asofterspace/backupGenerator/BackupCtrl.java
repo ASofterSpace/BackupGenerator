@@ -15,6 +15,9 @@ import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -49,6 +52,8 @@ public class BackupCtrl {
 			if (cancelled) {
 				return;
 			}
+
+			OutputUtils.setTarget(target.getName() + " (mounted as " + target.getTargetDir().getDirname() + ")");
 
 			OutputUtils.println("Backing up to " + target + "...");
 			List<Action> actions = target.getActions();
@@ -101,6 +106,8 @@ public class BackupCtrl {
 				log.saveContent(logLines);
 			}
 		}
+
+		OutputUtils.message("Backup run done! :)");
 	}
 
 	private List<IdentifiedTarget> identifyTargets() {
@@ -268,7 +275,21 @@ public class BackupCtrl {
 			}
 
 			// actually backup this file
-			sourceFile.copyToDisk(destFile);
+			java.io.File destinationFile = destFile.getJavaFile();
+
+			// create parent directories
+			if (destinationFile.getParentFile() != null) {
+				destinationFile.getParentFile().mkdirs();
+			}
+
+			try {
+				Files.copy(sourceFile.getJavaPath(), destFile.getJavaPath(), StandardCopyOption.REPLACE_EXISTING);
+
+			} catch (IOException e) {
+				OutputUtils.printerrln("The file " + sourceFile.getAbsoluteFilename() + " could not be copied to " +
+					destFile.getAbsoluteFilename() + "!");
+			}
+
 			copyCounter++;
 			if (copyCounter > 1024) {
 				copyCounter = 0;

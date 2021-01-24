@@ -5,6 +5,7 @@
 package com.asofterspace.backupGenerator.gui;
 
 import com.asofterspace.backupGenerator.BackupCtrl;
+import com.asofterspace.backupGenerator.BackupGenerator;
 import com.asofterspace.backupGenerator.output.OutputUtils;
 import com.asofterspace.toolbox.configuration.ConfigFile;
 import com.asofterspace.toolbox.gui.Arrangement;
@@ -112,6 +113,8 @@ public class GUI extends MainWindow {
 						configuration.set(CONFIG_KEY_TOP, mainFrame.getLocation().y);
 					}
 				});
+
+				BackupGenerator.setGuiVisible(true);
 			}
 		});
 	}
@@ -220,17 +223,21 @@ public class GUI extends MainWindow {
 		GridBagLayout mainPanelLayout = new GridBagLayout();
 		mainPanel.setLayout(mainPanelLayout);
 
+		JLabel targetLabel = new JLabel("(target will appear here)");
+		mainPanel.add(targetLabel, new Arrangement(0, 0, 1.0, 0.05));
+		OutputUtils.setOutputLabel(targetLabel);
+
 		currentDirectoryLabel = new JLabel(CUR_DIR_BASE_TEXT);
-
-		mainPanel.add(currentDirectoryLabel, new Arrangement(0, 0, 1.0, 1.0));
-
+		mainPanel.add(currentDirectoryLabel, new Arrangement(0, 1, 1.0, 0.05));
 		OutputUtils.setCurrentDirectoryLabel(currentDirectoryLabel);
 
 		JLabel outputLabel = new JLabel("(output will appear here)");
-
-		mainPanel.add(outputLabel, new Arrangement(0, 1, 1.0, 1.0));
-
+		mainPanel.add(outputLabel, new Arrangement(0, 2, 1.0, 0.05));
 		OutputUtils.setOutputLabel(outputLabel);
+
+		JLabel errorLabel = new JLabel("");
+		mainPanel.add(errorLabel, new Arrangement(0, 3, 1.0, 1.0));
+		OutputUtils.setErrorLabel(errorLabel);
 
 		parent.add(mainPanel, BorderLayout.CENTER);
 

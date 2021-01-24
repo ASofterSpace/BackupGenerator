@@ -17,10 +17,12 @@ import javax.swing.SwingUtilities;
 public class BackupGenerator {
 
 	public final static String PROGRAM_TITLE = "BackupGenerator";
-	public final static String VERSION_NUMBER = "0.0.0.4(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "15. September 2020 - 21. January 2021";
+	public final static String VERSION_NUMBER = "0.0.0.5(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "15. September 2020 - 24. January 2021";
 
 	private static ConfigFile config;
+
+	private static volatile boolean guiVisible = false;
 
 
 	public static void main(String[] args) {
@@ -72,9 +74,17 @@ public class BackupGenerator {
 
 		SwingUtilities.invokeLater(new GUI(backupCtrl, config));
 
+		while (!guiVisible) {
+			Utils.sleep(1000);
+		}
+
 		OutputUtils.println("Starting backup ctrl...");
 
 		backupCtrl.start();
+	}
+
+	public static void setGuiVisible(boolean guiVisibleArg) {
+		guiVisible = guiVisibleArg;
 	}
 
 }
