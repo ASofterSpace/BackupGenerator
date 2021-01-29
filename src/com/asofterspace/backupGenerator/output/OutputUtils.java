@@ -23,7 +23,7 @@ public class OutputUtils {
 
 	private static boolean printDirectories = false;
 
-	private static String errorText = "";
+	private static StringBuilder errorText = new StringBuilder();
 
 
 	public static void println(String line) {
@@ -49,8 +49,8 @@ public class OutputUtils {
 		if (errorLabel == null) {
 			System.err.println(line);
 		} else {
-			errorText += line + "<br>";
-			errorLabel.setText("<html>" + errorText);
+			errorText.append(line + "<br>\n");
+			errorLabel.setText("<html>" + errorText.toString() + "</html>");
 		}
 	}
 
