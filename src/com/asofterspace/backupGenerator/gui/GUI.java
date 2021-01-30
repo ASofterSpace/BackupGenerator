@@ -34,6 +34,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
@@ -235,9 +237,10 @@ public class GUI extends MainWindow {
 		mainPanel.add(outputLabel, new Arrangement(0, 2, 1.0, 0.05));
 		OutputUtils.setOutputLabel(outputLabel);
 
-		JLabel errorLabel = new JLabel("");
-		mainPanel.add(errorLabel, new Arrangement(0, 3, 1.0, 1.0));
-		OutputUtils.setErrorLabel(errorLabel);
+		JTextArea errorMemo = new JTextArea("");
+		JScrollPane errorScroller = new JScrollPane(errorMemo);
+		mainPanel.add(errorScroller, new Arrangement(0, 3, 1.0, 1.0));
+		OutputUtils.setErrorMemo(errorMemo);
 
 		parent.add(mainPanel, BorderLayout.CENTER);
 

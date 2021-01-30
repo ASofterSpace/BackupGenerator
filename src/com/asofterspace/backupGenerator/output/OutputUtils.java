@@ -7,13 +7,14 @@ package com.asofterspace.backupGenerator.output;
 import com.asofterspace.toolbox.gui.GuiUtils;
 
 import javax.swing.JLabel;
+import javax.swing.JTextArea;
 
 
 public class OutputUtils {
 
 	private static JLabel outputLabel;
 
-	private static JLabel errorLabel;
+	private static JTextArea errorMemo;
 
 	private static JLabel targetLabel;
 
@@ -46,11 +47,12 @@ public class OutputUtils {
 	public static void printerrln(String line) {
 		line = "[ERROR] " + line;
 
-		if (errorLabel == null) {
+		if (errorMemo == null) {
 			System.err.println(line);
 		} else {
-			errorText.append(line + "<br>\n");
-			errorLabel.setText("<html>" + errorText.toString() + "</html>");
+			errorText.append(line);
+			errorText.append("\n");
+			errorMemo.setText(errorText.toString());
 		}
 	}
 
@@ -76,8 +78,8 @@ public class OutputUtils {
 		printDirectories = printDirectoriesArg;
 	}
 
-	public static void setErrorLabel(JLabel errorLabelArg) {
-		errorLabel = errorLabelArg;
+	public static void setErrorMemo(JTextArea errorMemoArg) {
+		errorMemo = errorMemoArg;
 	}
 
 	public static void setTarget(String targetArg) {
