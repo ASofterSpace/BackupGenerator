@@ -193,6 +193,7 @@ public class BackupCtrl {
 			// however, if today's backup destination dir already exists...
 			if (datedDestinationToday.exists()) {
 				// ... then use that one instead, as we don't want to copy the older one into the newer one afterwards
+				// (which fully guards against any problems with re-running backupper several times a day!)
 				actualDestination = datedDestinationToday;
 			}
 		} else {
@@ -209,11 +210,6 @@ public class BackupCtrl {
 				OutputUtils.println("  UNKNOWN ACTION KIND " + action.getKind() + "!");
 				return destinationParent.getAbsoluteDirname() + "/" + source.getLocalDirname() +
 					" (" + action.getKind() + " unknown!)";
-		}
-
-		if (actualDestination.getLocalDirname().equals(datedDestinationToday.getLocalDirname())) {
-			OutputUtils.println("  ACTION ALREADY PERFORMED TODAY FOR '" + datedDestinationToday.getLocalDirname() + "'!");
-			return actualDestination.getAbsoluteDirname() + " already performed today!";
 		}
 
 		performAction(action.getKind(), sources, actualDestination, "");
