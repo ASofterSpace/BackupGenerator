@@ -132,7 +132,7 @@ public class BackupCtrl {
 	private String startAction(Action action, List<String> sourcePaths, Directory destinationParent, int replicationFactor) {
 
 		if (cancelled) {
-			return null;
+			return "cancelled";
 		}
 
 		Directory source = new Directory(sourcePaths.get(0));
@@ -211,10 +211,15 @@ public class BackupCtrl {
 					" (" + action.getKind() + " unknown!)";
 		}
 
+		if (actualDestination.getLocalDirname().equals(datedDestinationToday.getLocalDirname())) {
+			OutputUtils.println("  ACTION ALREADY PERFORMED TODAY FOR '" + datedDestinationToday.getLocalDirname() + "'!");
+			return actualDestination.getAbsoluteDirname() + " already performed today!";
+		}
+
 		performAction(action.getKind(), sources, actualDestination, "");
 
 		if (cancelled) {
-			return null;
+			return "cancelled";
 		}
 
 		// once all is done, rename the folder we are backuping into to the current date
