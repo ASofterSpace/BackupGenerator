@@ -145,60 +145,80 @@ public class BackupCtrl {
 			sep = " and ";
 		}
 
-		Directory datedDestinationToday = new Directory(destinationParent, action.getDestinationName() +
-			" (" + StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ")");
+		Directory destination = null;
+		Directory renameDestination = null;
 
-		OutputUtils.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
-			datedDestinationToday.getAbsoluteDirname() + " with replication factor " + replicationFactor + "...");
+		Directory destinationWithActualQualifier = new Directory(destinationParent, action.getDestinationName() +
+			" (actual)");
 
-		boolean recursively = false;
-		List<Directory> destDirs = destinationParent.getAllDirectories(recursively);
-		List<Directory> existingDestDirs = new ArrayList<>();
-		for (Directory destDir : destDirs) {
-			if (destDir.getLocalDirname().startsWith(action.getDestinationName() + " (")) {
-				existingDestDirs.add(destDir);
-			}
-		}
+		if (destinationWithActualQualifier.exists()) {
 
-		Collections.sort(existingDestDirs, new Comparator<Directory>() {
-			public int compare(Directory a, Directory b) {
-				String dateAStr = a.getDirname().substring(a.getDirname().lastIndexOf(" (") + 2);
-				dateAStr = dateAStr.substring(0, dateAStr.length() - 1);
-				Date dateA = DateUtils.parseDate(dateAStr);
+			destination = destinationWithActualQualifier;
 
-				String dateBStr = b.getDirname().substring(b.getDirname().lastIndexOf(" (") + 2);
-				dateBStr = dateBStr.substring(0, dateBStr.length() - 1);
-				Date dateB = DateUtils.parseDate(dateBStr);
+			OutputUtils.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
+				destination.getAbsoluteDirname() + " (ignoring replication factor for actual destionations)...");
 
-				return dateA.compareTo(dateB);
-			}
-		});
-
-		OutputUtils.println("  Found " + existingDestDirs.size() + " existing backups, expecting " +
-			replicationFactor + "...");
-
-		// removing oldest backups if there are too many
-		while (existingDestDirs.size() > replicationFactor) {
-			OutputUtils.println("  Removing " + existingDestDirs.get(0).getAbsoluteDirname() + "...");
-			existingDestDirs.get(0).delete();
-			existingDestDirs.remove(0);
-		}
-
-		Directory actualDestination = null;
-
-		if (existingDestDirs.size() == replicationFactor) {
-			// using oldest backup if there are exactly as many as wanted
-			actualDestination = existingDestDirs.get(0);
-
-			// however, if today's backup destination dir already exists...
-			if (datedDestinationToday.exists()) {
-				// ... then use that one instead, as we don't want to copy the older one into the newer one afterwards
-				// (which fully guards against any problems with re-running backupper several times a day!)
-				actualDestination = datedDestinationToday;
-			}
 		} else {
-			// creating new backup set to today if there are fewer than wanted
-			actualDestination = datedDestinationToday;
+
+			Directory datedDestinationToday = new Directory(destinationParent, action.getDestinationName() +
+				" (" + StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ")");
+
+			OutputUtils.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
+				datedDestinationToday.getAbsoluteDirname() + " with replication factor " + replicationFactor + "...");
+
+			boolean recursively = false;
+			List<Directory> destDirs = destinationParent.getAllDirectories(recursively);
+			List<Directory> existingDestDirs = new ArrayList<>();
+			for (Directory destDir : destDirs) {
+				if (destDir.getLocalDirname().startsWith(action.getDestinationName() + " (")) {
+					existingDestDirs.add(destDir);
+				}
+			}
+
+			Collections.sort(existingDestDirs, new Comparator<Directory>() {
+				public int compare(Directory a, Directory b) {
+					String dateAStr = a.getDirname().substring(a.getDirname().lastIndexOf(" (") + 2);
+					dateAStr = dateAStr.substring(0, dateAStr.length() - 1);
+					Date dateA = DateUtils.parseDate(dateAStr);
+
+					String dateBStr = b.getDirname().substring(b.getDirname().lastIndexOf(" (") + 2);
+					dateBStr = dateBStr.substring(0, dateBStr.length() - 1);
+					Date dateB = DateUtils.parseDate(dateBStr);
+
+					return dateA.compareTo(dateB);
+				}
+			});
+
+			OutputUtils.println("  Found " + existingDestDirs.size() + " existing backups, expecting " +
+				replicationFactor + "...");
+
+			// removing oldest backups if there are too many
+			while (existingDestDirs.size() > replicationFactor) {
+				OutputUtils.println("  Removing " + existingDestDirs.get(0).getAbsoluteDirname() + "...");
+				existingDestDirs.get(0).delete();
+				existingDestDirs.remove(0);
+			}
+
+			if (existingDestDirs.size() == replicationFactor) {
+
+				if (!datedDestinationToday.exists()) {
+
+					// using oldest backup if there are exactly as many as wanted
+					destination = existingDestDirs.get(0);
+
+					renameDestination = datedDestinationToday;
+
+				} else {
+
+					// however, if today's backup destination dir already exists, then use that one instead,
+					// as we don't want to copy the older one into the newer one afterwards
+					// (which fully guards against any problems with re-running backupper several times a day!)
+					destination = datedDestinationToday;
+				}
+			} else {
+				// creating new backup set to today if there are fewer than wanted
+				destination = datedDestinationToday;
+			}
 		}
 
 		switch (action.getKind()) {
@@ -212,16 +232,18 @@ public class BackupCtrl {
 					" (" + action.getKind() + " unknown!)";
 		}
 
-		performAction(action.getKind(), sources, actualDestination, "");
+		performAction(action.getKind(), sources, destination, "");
 
 		if (cancelled) {
 			return "cancelled";
 		}
 
 		// once all is done, rename the folder we are backuping into to the current date
-		actualDestination.rename(datedDestinationToday.getLocalDirname());
+		if (renameDestination != null) {
+			destination.rename(renameDestination.getLocalDirname());
+		}
 
-		return datedDestinationToday.getLocalDirname();
+		return destination.getLocalDirname();
 	}
 
 	private void performAction(String kind, List<Directory> sources, Directory destination, String curRelPath) {
