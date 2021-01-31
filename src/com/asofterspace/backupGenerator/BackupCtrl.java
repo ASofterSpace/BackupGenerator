@@ -78,7 +78,7 @@ public class BackupCtrl {
 				Directory destinationParent = target.getTargetDir();
 				List<String> sourcePaths = action.getSourcePaths();
 				int replicationFactor = action.getReplicationFactor();
-				String actionLog = startAction(action, sourcePaths, destinationParent, replicationFactor);
+				String actionLog = startAction(action, sourcePaths, destinationParent, replicationFactor, targets);
 
 				if (cancelled) {
 					return;
@@ -129,21 +129,62 @@ public class BackupCtrl {
 		return result;
 	}
 
-	private String startAction(Action action, List<String> sourcePaths, Directory destinationParent, int replicationFactor) {
+	private String startAction(Action action, List<String> sourcePaths, Directory destinationParent, int replicationFactor,
+		List<IdentifiedTarget> targets) {
 
 		if (cancelled) {
 			return "cancelled";
 		}
 
-		Directory source = new Directory(sourcePaths.get(0));
 		List<Directory> sources = new ArrayList<>();
 		String fromStr = "";
 		String sep = "";
 		for (String sourcePath : sourcePaths) {
+
+			// we are listing the sources for this sync or write action, and for each source, we check
+			// if the name is like [hdd_12_1]\\blubb (actual), so starting with [target], in which case
+			// we try to resolve that target to an actual directory path
+			if (sourcePath.startsWith("[")) {
+				sourcePath = sourcePath.substring(1);
+				if (!sourcePath.contains("]")) {
+					OutputUtils.println("  SOURCE '" + sourcePath + "' MISSING THE ']'!");
+					return destinationParent.getAbsoluteDirname() + " (source '" + sourcePath + "' missing the ']'!)";
+				}
+				String sourceName = sourcePath.substring(0, sourcePath.indexOf("]"));
+				sourcePath = sourcePath.substring(sourcePath.indexOf("]") + 1);
+				boolean foundTargetAsSource = false;
+				for (IdentifiedTarget target : targets) {
+					if (sourceName.equals(target.getName())) {
+						sourcePath = target.getTargetDir().getAbsoluteDirname() + sourcePath;
+						foundTargetAsSource = true;
+						break;
+					}
+				}
+				if (!foundTargetAsSource) {
+					OutputUtils.println("  SOURCE NOT FOUND: [" + sourceName + "]!");
+					return destinationParent.getAbsoluteDirname() + " (source [" + sourceName + "] not found!)";
+				}
+			}
+
+			// actually add the source to the list of sources that we will use
 			sources.add(new Directory(sourcePath));
 			fromStr += sep + sourcePath;
 			sep = " and ";
 		}
+		Directory source = sources.get(0);
+
+
+		switch (action.getKind()) {
+			// allowed action kinds
+			case "sync":
+			case "writeonly":
+				break;
+			default:
+				OutputUtils.println("  UNKNOWN ACTION KIND " + action.getKind() + "!");
+				return destinationParent.getAbsoluteDirname() + "/" + source.getLocalDirname() +
+					" (" + action.getKind() + " unknown!)";
+		}
+
 
 		Directory destination = null;
 		Directory renameDestination = null;
@@ -219,17 +260,6 @@ public class BackupCtrl {
 				// creating new backup set to today if there are fewer than wanted
 				destination = datedDestinationToday;
 			}
-		}
-
-		switch (action.getKind()) {
-			// allowed action kinds
-			case "sync":
-			case "writeonly":
-				break;
-			default:
-				OutputUtils.println("  UNKNOWN ACTION KIND " + action.getKind() + "!");
-				return destinationParent.getAbsoluteDirname() + "/" + source.getLocalDirname() +
-					" (" + action.getKind() + " unknown!)";
 		}
 
 		performAction(action.getKind(), sources, destination, "");
