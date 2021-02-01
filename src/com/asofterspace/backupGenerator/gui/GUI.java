@@ -227,7 +227,7 @@ public class GUI extends MainWindow {
 
 		JLabel targetLabel = new JLabel("(target will appear here)");
 		mainPanel.add(targetLabel, new Arrangement(0, 0, 1.0, 0.05));
-		OutputUtils.setOutputLabel(targetLabel);
+		OutputUtils.setTarget(targetLabel);
 
 		currentDirectoryLabel = new JLabel(CUR_DIR_BASE_TEXT);
 		mainPanel.add(currentDirectoryLabel, new Arrangement(0, 1, 1.0, 0.05));
