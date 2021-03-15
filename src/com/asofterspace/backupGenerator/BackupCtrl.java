@@ -34,6 +34,7 @@ public class BackupCtrl {
 
 	private volatile boolean paused = false;
 	private volatile boolean cancelled = false;
+	private boolean reportAllActions = false;
 
 
 	public BackupCtrl(Database database) {
@@ -278,7 +279,7 @@ public class BackupCtrl {
 
 	private void performAction(String kind, List<Directory> sources, Directory destination, String curRelPath) {
 
-		OutputUtils.printDir("Checking " + curRelPath + "...");
+		OutputUtils.printDir(kind + "ing " + curRelPath + "...");
 
 		boolean recursively = false;
 
@@ -287,6 +288,10 @@ public class BackupCtrl {
 			curSources.add(new Directory(source, curRelPath));
 		}
 		Directory curDestination = new Directory(destination, curRelPath);
+
+		if (OutputUtils.getPrintDirectories()) {
+			OutputUtils.printDir(kind + "ing " + curDestination.getAbsoluteDirname() + "...");
+		}
 
 		curDestination.create();
 
@@ -317,7 +322,7 @@ public class BackupCtrl {
 					if ((sourceSize != null) && (destSize != null) && ((long) sourceSize == (long) destSize)) {
 						// ... skip backing up this file!
 						checkCounter++;
-						if (checkCounter > 2048) {
+						if (reportAllActions || (checkCounter > 2048)) {
 							checkCounter = 0;
 							OutputUtils.println("    checking " + sourceFile.getAbsoluteFilename() +
 								"... identical to " + destFile.getAbsoluteFilename());
@@ -335,25 +340,56 @@ public class BackupCtrl {
 				destinationFile.getParentFile().mkdirs();
 			}
 
-			try {
-				Files.copy(sourceFile.getJavaPath(), destFile.getJavaPath(), StandardCopyOption.REPLACE_EXISTING);
-
-			} catch (IOException e) {
-				OutputUtils.printerrln("The file " + sourceFile.getAbsoluteFilename() + " could not be copied to " +
-					destFile.getAbsoluteFilename() + "!");
-			}
-
 			copyCounter++;
-			if (copyCounter > 1024) {
+			if (reportAllActions || (copyCounter > 1024)) {
 				copyCounter = 0;
 				OutputUtils.println("    copying " + sourceFile.getAbsoluteFilename() + " to " +
 					destFile.getAbsoluteFilename());
 			}
+
+			try {
+				// attempt to copy the file...
+				Files.copy(sourceFile.getJavaPath(), destFile.getJavaPath(),
+					StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+
+			} catch (IOException e1) {
+
+				// ... and in case of problems...
+				try {
+					// ... attempt to delete the destination file...
+					Files.delete(destFile.getJavaPath());
+				} catch (IOException eIgnore) {
+					// ... but for now do nothing if this fails...
+				}
+				try {
+					// ... then re-attempt to copy...
+					Files.copy(sourceFile.getJavaPath(), destFile.getJavaPath(),
+						StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+
+				} catch (IOException e2) {
+					// ... and in case of another failure, actually complain about it!
+					OutputUtils.printerrln("The file " + sourceFile.getAbsoluteFilename() + " could not be copied to " +
+						destFile.getAbsoluteFilename() + " due to first " + toOneLine(e1) + " and then " + toOneLine(e2) +
+						" in the second attempt!");
+				}
+			}
 		}
 
 		if ("sync".equals(kind)) {
+
+			if (reportAllActions) {
+				OutputUtils.println("    syncing files...");
+			}
+
 			// in case of sync, delete files in the destination which are not in the source
 			List<File> destChildren = curDestination.getAllFiles(recursively);
+
+			List<String> sourceLocalFilenames = new ArrayList<>();
+
+			for (File sourceFile : childFiles) {
+				sourceLocalFilenames.add(sourceFile.getLocalFilename());
+			}
+
 			for (File destChild : destChildren) {
 
 				while (paused) {
@@ -365,8 +401,11 @@ public class BackupCtrl {
 				}
 
 				boolean deletedInSource = true;
-				for (File sourceFile : childFiles) {
-					if (sourceFile.getLocalFilename().equals(destChild.getLocalFilename())) {
+
+				String destLocalFilename = destChild.getLocalFilename();
+
+				for (String sourceLocalFilename : sourceLocalFilenames) {
+					if (destLocalFilename.equals(sourceLocalFilename)) {
 						deletedInSource = false;
 						break;
 					}
@@ -388,6 +427,17 @@ public class BackupCtrl {
 		if ("sync".equals(kind)) {
 			// in case of sync, delete child directories in the destination which are not in the source
 			List<Directory> destChildren = curDestination.getAllDirectories(recursively);
+
+			if (reportAllActions) {
+				OutputUtils.println("    syncing directories...");
+			}
+
+			List<String> sourceLocalDirnames = new ArrayList<>();
+
+			for (Directory sourceDir : childDirs) {
+				sourceLocalDirnames.add(sourceDir.getLocalDirname());
+			}
+
 			for (Directory destChild : destChildren) {
 
 				while (paused) {
@@ -399,8 +449,9 @@ public class BackupCtrl {
 				}
 
 				boolean deletedInSource = true;
-				for (Directory sourceDir : childDirs) {
-					if (sourceDir.getLocalDirname().equals(destChild.getLocalDirname())) {
+				String destLocalDirname = destChild.getLocalDirname();
+				for (String sourceLocalDirname : sourceLocalDirnames) {
+					if (destLocalDirname.equals(sourceLocalDirname)) {
 						deletedInSource = false;
 						break;
 					}
@@ -410,6 +461,21 @@ public class BackupCtrl {
 				}
 			}
 		}
+	}
+
+	private String toOneLine(IOException e) {
+		String result = e.toString();
+		result = StrUtils.replaceAll(result, "\r", "");
+		result = StrUtils.replaceAll(result, "\n", "");
+		return result;
+	}
+
+	public boolean getReportAllActions() {
+		return reportAllActions;
+	}
+
+	public void setReportAllActions(boolean reportAllActions) {
+		this.reportAllActions = reportAllActions;
 	}
 
 	public void cancel() {
@@ -424,6 +490,5 @@ public class BackupCtrl {
 	public void resume() {
 		paused = false;
 	}
-
 
 }

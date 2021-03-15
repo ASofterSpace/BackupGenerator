@@ -27,6 +27,7 @@ import java.awt.Point;
 import java.io.IOException;
 import java.util.List;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -172,7 +173,7 @@ public class GUI extends MainWindow {
 		JMenu settings = new JMenu("Settings");
 		menu.add(settings);
 
-		JMenuItem toggleShowingCurDir = new JMenuItem("Toggle Showing Current Directory");
+		JCheckBoxMenuItem toggleShowingCurDir = new JCheckBoxMenuItem("Show Current Directory");
 		toggleShowingCurDir.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -181,9 +182,21 @@ public class GUI extends MainWindow {
 				if (!newVal) {
 					currentDirectoryLabel.setText(CUR_DIR_BASE_TEXT);
 				}
+				toggleShowingCurDir.setState(newVal);
 			}
 		});
 		settings.add(toggleShowingCurDir);
+
+		JCheckBoxMenuItem toggleReportAllActions = new JCheckBoxMenuItem("Report Output for Every Individual Action");
+		toggleReportAllActions.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				boolean newVal = !backupCtrl.getReportAllActions();
+				backupCtrl.setReportAllActions(newVal);
+				toggleReportAllActions.setState(newVal);
+			}
+		});
+		settings.add(toggleReportAllActions);
 
 		JMenu huh = new JMenu("?");
 
