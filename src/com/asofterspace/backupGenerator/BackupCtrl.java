@@ -8,6 +8,7 @@ import com.asofterspace.backupGenerator.actions.Action;
 import com.asofterspace.backupGenerator.output.OutputUtils;
 import com.asofterspace.backupGenerator.target.IdentifiedTarget;
 import com.asofterspace.backupGenerator.target.TargetDrive;
+import com.asofterspace.toolbox.io.BinaryFile;
 import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.TextFile;
@@ -16,9 +17,11 @@ import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -372,10 +375,27 @@ public class BackupCtrl {
 						StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
 
 				} catch (IOException e2) {
-					// ... and in case of another failure, actually complain about it!
-					OutputUtils.printerrln("The file " + sourceFile.getAbsoluteFilename() + " could not be copied to " +
-						destFile.getAbsoluteFilename() + " due to first " + toOneLine(e1) + " and then " + toOneLine(e2) +
-						" in the second attempt!");
+
+					boolean allFine = false;
+
+					// ... and if we are told we have no access, check if the content of the file
+					// is already perfectly dandy - if so, no need to be unhappy about anything!
+					if (e2 instanceof AccessDeniedException) {
+						BinaryFile sourceBinary = new BinaryFile(sourceFile);
+						byte[] sourceData = sourceBinary.loadContent();
+						BinaryFile destBinary = new BinaryFile(destFile);
+						byte[] destData = destBinary.loadContent();
+						if (Arrays.equals(sourceData, destData)) {
+							allFine = true;
+						}
+					}
+
+					if (!allFine) {
+						// ... and in case of another failure, actually complain about it!
+						OutputUtils.printerrln("The file " + sourceFile.getAbsoluteFilename() + " could not be copied to " +
+							destFile.getAbsoluteFilename() + " due to first " + toOneLine(e1) + " and then " + toOneLine(e2) +
+							" in the second attempt!");
+					}
 				}
 			}
 		}
