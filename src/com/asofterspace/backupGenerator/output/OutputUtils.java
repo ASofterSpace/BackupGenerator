@@ -82,6 +82,13 @@ public class OutputUtils {
 		errorMemo = errorMemoArg;
 	}
 
+	public static String getErrorLogContent() {
+		if (errorMemo == null) {
+			return "";
+		}
+		return errorMemo.getText();
+	}
+
 	public static void setTarget(String targetArg) {
 		target = targetArg;
 		updateTargetLabel();

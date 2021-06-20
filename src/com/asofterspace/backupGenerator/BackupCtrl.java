@@ -108,6 +108,11 @@ public class BackupCtrl {
 			}
 		}
 
+		String logFileName = StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ".log";
+		TextFile logFile = new TextFile(logFileName);
+		logFile.setContent(OutputUtils.getErrorLogContent());
+		logFile.save();
+
 		OutputUtils.message("Backup run done! :)");
 	}
 
