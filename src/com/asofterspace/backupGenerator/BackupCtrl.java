@@ -297,6 +297,13 @@ public class BackupCtrl {
 		}
 		Directory curDestination = new Directory(destination, curRelPath);
 
+		if (curDestination.getDirname().endsWith(" ")) {
+			OutputUtils.printerrln("Encountered a directory whose name ends with a space: '" +
+				curDestination.getAbsoluteDirname() + "' - ignoring this directory completely " +
+				"to prevent problems...");
+			return;
+		}
+
 		if (OutputUtils.getPrintDirectories()) {
 			OutputUtils.printDir(kind + "ing " + curDestination.getAbsoluteDirname() + "...");
 		}
