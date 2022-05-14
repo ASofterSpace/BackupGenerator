@@ -17,6 +17,8 @@ import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -82,10 +84,15 @@ public class BackupCtrl {
 				Directory destinationParent = target.getTargetDir();
 				List<String> sourcePaths = action.getSourcePaths();
 				int replicationFactor = action.getReplicationFactor();
-				String actionLog = startAction(action, sourcePaths, destinationParent, replicationFactor, targets);
-
-				if (cancelled) {
-					return;
+				String actionLog = "error";
+				try {
+					actionLog = startAction(action, sourcePaths, destinationParent, replicationFactor, targets);
+				} catch (Throwable t) {
+					StringWriter strWr = new StringWriter();
+					PrintWriter prWr = new PrintWriter(strWr);
+					t.printStackTrace(prWr);
+					actionLog = strWr.toString() + "\nCancelling the rest of the backup run...";
+					cancelled = true;
 				}
 
 				if (log != null) {
@@ -93,6 +100,10 @@ public class BackupCtrl {
 					logLines.append(actionLog);
 					log.saveContent(logLines);
 					actionLogs.add(actionLog);
+				}
+
+				if (cancelled) {
+					return;
 				}
 			}
 
@@ -221,19 +232,17 @@ public class BackupCtrl {
 			List<Directory> existingDestDirs = new ArrayList<>();
 			for (Directory destDir : destDirs) {
 				if (destDir.getLocalDirname().startsWith(action.getDestinationName() + " (")) {
-					existingDestDirs.add(destDir);
+					// ignore non-dated directories (e.g. movies (just in) should be ignored)
+					if (getDateFromDirectory(destDir) != null) {
+						existingDestDirs.add(destDir);
+					}
 				}
 			}
 
 			Collections.sort(existingDestDirs, new Comparator<Directory>() {
 				public int compare(Directory a, Directory b) {
-					String dateAStr = a.getDirname().substring(a.getDirname().lastIndexOf(" (") + 2);
-					dateAStr = dateAStr.substring(0, dateAStr.length() - 1);
-					Date dateA = DateUtils.parseDate(dateAStr);
-
-					String dateBStr = b.getDirname().substring(b.getDirname().lastIndexOf(" (") + 2);
-					dateBStr = dateBStr.substring(0, dateBStr.length() - 1);
-					Date dateB = DateUtils.parseDate(dateBStr);
+					Date dateA = getDateFromDirectory(a);
+					Date dateB = getDateFromDirectory(b);
 
 					return dateA.compareTo(dateB);
 				}
@@ -521,6 +530,25 @@ public class BackupCtrl {
 
 	public void resume() {
 		paused = false;
+	}
+
+	private Date getDateFromDirectory(Directory dir) {
+
+		String dirname = dir.getDirname();
+
+		if (dirname.lastIndexOf(" (") < 0) {
+			return null;
+		}
+
+		String dateStr = dirname.substring(dirname.lastIndexOf(" (") + 2);
+
+		if (!dirname.endsWith(")")) {
+			return null;
+		}
+
+		dateStr = dateStr.substring(0, dateStr.length() - 1);
+
+		return DateUtils.parseDate(dateStr);
 	}
 
 }
