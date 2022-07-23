@@ -187,7 +187,20 @@ public class GUI extends MainWindow {
 		});
 		settings.add(toggleShowingCurDir);
 
-		JCheckBoxMenuItem toggleReportAllActions = new JCheckBoxMenuItem("Report Output for Every Individual Action");
+		JCheckBoxMenuItem toggleReportChangingActions = new JCheckBoxMenuItem("Report Output for Every Write Action");
+		toggleReportChangingActions.setState(true);
+		toggleReportChangingActions.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				boolean newVal = !backupCtrl.getReportChangingActions();
+				backupCtrl.setReportChangingActions(newVal);
+				toggleReportChangingActions.setState(newVal);
+			}
+		});
+		settings.add(toggleReportChangingActions);
+
+		JCheckBoxMenuItem toggleReportAllActions = new JCheckBoxMenuItem("Report Output for Every Write and Check Action");
+		toggleReportAllActions.setState(false);
 		toggleReportAllActions.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {

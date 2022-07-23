@@ -41,6 +41,8 @@ public class BackupCtrl {
 	private volatile boolean cancelled = false;
 	private boolean reportAllActions = false;
 
+	private boolean reportChangingActions = true;
+
 
 	public BackupCtrl(Database database) {
 		this.database = database;
@@ -365,8 +367,9 @@ public class BackupCtrl {
 			}
 
 			copyCounter++;
-			if (reportAllActions || (copyCounter > 1024)) {
+			if (reportAllActions || reportChangingActions || (copyCounter > 1024)) {
 				copyCounter = 0;
+
 				OutputUtils.println("    copying " + sourceFile.getAbsoluteFilename() + " to " +
 					destFile.getAbsoluteFilename());
 			}
@@ -517,6 +520,14 @@ public class BackupCtrl {
 
 	public void setReportAllActions(boolean reportAllActions) {
 		this.reportAllActions = reportAllActions;
+	}
+
+	public boolean getReportChangingActions() {
+		return reportChangingActions;
+	}
+
+	public void setReportChangingActions(boolean reportChangingActions) {
+		this.reportChangingActions = reportChangingActions;
 	}
 
 	public void cancel() {
