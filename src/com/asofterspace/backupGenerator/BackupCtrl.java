@@ -219,7 +219,7 @@ public class BackupCtrl {
 			destination = destinationWithActualQualifier;
 
 			OutputUtils.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
-				destination.getAbsoluteDirname() + " (ignoring replication factor for actual destionations)...");
+				destination.getAbsoluteDirname() + " (ignoring replication factor for \"(actual)\" destionations)...");
 
 		} else {
 
@@ -326,11 +326,18 @@ public class BackupCtrl {
 			childFiles.addAll(curSource.getAllFiles(recursively));
 		}
 		for (File sourceFile : childFiles) {
+			boolean didPause = false;
 			while (paused) {
+				didPause = true;
+				OutputUtils.println("    [paused]");
 				Utils.sleep(1000);
+			}
+			if (didPause) {
+				OutputUtils.println("    [resumed]");
 			}
 
 			if (cancelled) {
+				OutputUtils.println("    [cancelled]");
 				return;
 			}
 
@@ -436,11 +443,18 @@ public class BackupCtrl {
 
 			for (File destChild : destChildren) {
 
+				boolean didPause = false;
 				while (paused) {
+					didPause = true;
+					OutputUtils.println("    [paused]");
 					Utils.sleep(1000);
+				}
+				if (didPause) {
+					OutputUtils.println("    [resumed]");
 				}
 
 				if (cancelled) {
+					OutputUtils.println("    [cancelled]");
 					return;
 				}
 
@@ -484,11 +498,18 @@ public class BackupCtrl {
 
 			for (Directory destChild : destChildren) {
 
+				boolean didPause = false;
 				while (paused) {
+					didPause = true;
+					OutputUtils.println("    [paused]");
 					Utils.sleep(1000);
+				}
+				if (didPause) {
+					OutputUtils.println("    [resumed]");
 				}
 
 				if (cancelled) {
+					OutputUtils.println("    [cancelled]");
 					return;
 				}
 
