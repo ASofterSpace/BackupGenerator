@@ -7,8 +7,12 @@ package com.asofterspace.backupGenerator;
 import com.asofterspace.backupGenerator.gui.GUI;
 import com.asofterspace.backupGenerator.output.OutputUtils;
 import com.asofterspace.toolbox.configuration.ConfigFile;
+import com.asofterspace.toolbox.gui.GuiUtils;
+import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonParseException;
+import com.asofterspace.toolbox.io.TextFile;
+import com.asofterspace.toolbox.utils.DateUtils;
 import com.asofterspace.toolbox.Utils;
 
 import javax.swing.SwingUtilities;
@@ -23,6 +27,9 @@ public class BackupGenerator {
 	private static ConfigFile config;
 
 	private static volatile boolean guiVisible = false;
+
+	// synchronize with browser
+	public static TextFile BACKUP_RUN_FILE = new TextFile("C:\\home\\BACKUP.TXT");
 
 
 	public static void main(String[] args) {
@@ -43,6 +50,16 @@ public class BackupGenerator {
 				return;
 			}
 		}
+
+		OutputUtils.println("Saving run-file...");
+
+		if (BACKUP_RUN_FILE.exists()) {
+			GuiUtils.notify("Refusing to start as previous backup run is not yet finished!\n" +
+				"(" + BACKUP_RUN_FILE.getCanonicalFilename() + " exists)");
+			return;
+		}
+
+		BACKUP_RUN_FILE.saveContent("Started backup run at " + DateUtils.serializeDateTime(DateUtils.now()));
 
 		OutputUtils.println("Loading database...");
 

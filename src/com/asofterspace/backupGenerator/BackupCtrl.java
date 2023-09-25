@@ -129,6 +129,8 @@ public class BackupCtrl {
 		logFile.setContent(OutputUtils.getErrorLogContent());
 		logFile.save();
 
+		BackupGenerator.BACKUP_RUN_FILE.delete();
+
 		OutputUtils.message("Backup run done! :)");
 	}
 
