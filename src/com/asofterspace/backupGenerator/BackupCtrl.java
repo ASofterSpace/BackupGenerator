@@ -50,6 +50,7 @@ public class BackupCtrl {
 
 	public void start() {
 
+		String finalRunStr = "cancelled";
 		cancelled = false;
 		paused = false;
 
@@ -58,6 +59,7 @@ public class BackupCtrl {
 		for (IdentifiedTarget target : targets) {
 
 			if (cancelled) {
+				finalizeRun(finalRunStr);
 				return;
 			}
 
@@ -95,6 +97,7 @@ public class BackupCtrl {
 					t.printStackTrace(prWr);
 					actionLog = strWr.toString() + "\nCancelling the rest of the backup run...";
 					cancelled = true;
+					finalRunStr += " due to exception";
 				}
 
 				if (log != null) {
@@ -105,6 +108,7 @@ public class BackupCtrl {
 				}
 
 				if (cancelled) {
+					finalizeRun(finalRunStr);
 					return;
 				}
 			}
@@ -124,6 +128,11 @@ public class BackupCtrl {
 			}
 		}
 
+		finalizeRun("done successfully");
+	}
+
+	private void finalizeRun(String finalRunStr) {
+
 		String logFileName = StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ".log";
 		TextFile logFile = new TextFile(logFileName);
 		logFile.setContent(OutputUtils.getErrorLogContent());
@@ -131,7 +140,12 @@ public class BackupCtrl {
 
 		BackupGenerator.BACKUP_RUN_FILE.delete();
 
-		OutputUtils.message("Backup run done! :)");
+		String smiley = "._.";
+		if (finalRunStr.startsWith("done")) {
+			smiley = ":)";
+		}
+
+		OutputUtils.message("Backup run " + finalRunStr + "! " + smiley);
 	}
 
 	private List<IdentifiedTarget> identifyTargets() {
