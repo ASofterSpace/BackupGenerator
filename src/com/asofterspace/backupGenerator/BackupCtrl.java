@@ -423,12 +423,29 @@ public class BackupCtrl {
 					// ... and if we are told we have no access, check if the content of the file
 					// is already perfectly dandy - if so, no need to be unhappy about anything!
 					if (e2 instanceof AccessDeniedException) {
-						BinaryFile sourceBinary = new BinaryFile(sourceFile);
-						byte[] sourceData = sourceBinary.loadContent();
-						BinaryFile destBinary = new BinaryFile(destFile);
-						byte[] destData = destBinary.loadContent();
-						if (Arrays.equals(sourceData, destData)) {
-							allFine = true;
+						OutputUtils.println("    size comparing " + sourceFile.getAbsoluteFilename() + " to " +
+							destFile.getAbsoluteFilename());
+
+						Long sourceSize = sourceFile.getSize();
+						Long destSize = destFile.getSize();
+						if ((sourceSize != null) && (destSize != null)) {
+							if (sourceSize == destSize) {
+								allFine = true;
+
+								// for files smaller than 256 kB, try to explicitly check the sizes...
+								if (sourceSize < 256 * 1024) {
+									OutputUtils.println("    binary comparing " + sourceFile.getAbsoluteFilename() + " to " +
+										destFile.getAbsoluteFilename());
+
+									BinaryFile sourceBinary = new BinaryFile(sourceFile);
+									byte[] sourceData = sourceBinary.loadContent();
+									BinaryFile destBinary = new BinaryFile(destFile);
+									byte[] destData = destBinary.loadContent();
+									if (!Arrays.equals(sourceData, destData)) {
+										allFine = false;
+									}
+								}
+							}
 						}
 					}
 
