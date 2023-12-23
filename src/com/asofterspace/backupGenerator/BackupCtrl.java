@@ -39,8 +39,8 @@ public class BackupCtrl {
 
 	private volatile boolean paused = false;
 	private volatile boolean cancelled = false;
-	private boolean reportAllActions = false;
 
+	private boolean reportAllActions = false;
 	private boolean reportChangingActions = true;
 
 
@@ -404,12 +404,20 @@ public class BackupCtrl {
 
 			} catch (IOException e1) {
 
+				if (reportAllActions) {
+					OutputUtils.println("    COPY EXCEPTION 1 :: " + e1);
+				}
+
 				// ... and in case of problems...
 				try {
 					// ... attempt to delete the destination file...
 					Files.delete(destFile.getJavaPath());
 				} catch (IOException eIgnore) {
 					// ... but for now do nothing if this fails...
+
+					if (reportAllActions) {
+						OutputUtils.println("    DELETE EXCEPTION :: " + eIgnore);
+					}
 				}
 				try {
 					// ... then re-attempt to copy...
@@ -418,13 +426,19 @@ public class BackupCtrl {
 
 				} catch (IOException e2) {
 
+					if (reportAllActions) {
+						OutputUtils.println("    COPY EXCEPTION 2 :: " + e2);
+					}
+
 					boolean allFine = false;
 
 					// ... and if we are told we have no access, check if the content of the file
 					// is already perfectly dandy - if so, no need to be unhappy about anything!
 					if (e2 instanceof AccessDeniedException) {
-						OutputUtils.println("    size comparing " + sourceFile.getAbsoluteFilename() + " to " +
-							destFile.getAbsoluteFilename());
+						if (reportAllActions) {
+							OutputUtils.println("    size comparing " + sourceFile.getAbsoluteFilename() + " to " +
+								destFile.getAbsoluteFilename());
+						}
 
 						Long sourceSize = sourceFile.getSize();
 						Long destSize = destFile.getSize();
@@ -434,8 +448,10 @@ public class BackupCtrl {
 
 								// for files smaller than 256 kB, try to explicitly check the sizes...
 								if (sourceSize < 256 * 1024) {
-									OutputUtils.println("    binary comparing " + sourceFile.getAbsoluteFilename() + " to " +
-										destFile.getAbsoluteFilename());
+									if (reportAllActions) {
+										OutputUtils.println("    binary comparing " + sourceFile.getAbsoluteFilename() +
+											" to " + destFile.getAbsoluteFilename());
+									}
 
 									BinaryFile sourceBinary = new BinaryFile(sourceFile);
 									byte[] sourceData = sourceBinary.loadContent();
@@ -443,6 +459,11 @@ public class BackupCtrl {
 									byte[] destData = destBinary.loadContent();
 									if (!Arrays.equals(sourceData, destData)) {
 										allFine = false;
+									}
+
+									if (reportAllActions) {
+										OutputUtils.println("    END OF binary comparing " + sourceFile.getAbsoluteFilename() +
+											" to " + destFile.getAbsoluteFilename());
 									}
 								}
 							}

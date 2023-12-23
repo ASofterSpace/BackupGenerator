@@ -26,19 +26,23 @@ public class OutputUtils {
 
 	private static StringBuilder errorText = new StringBuilder();
 
+	private static boolean debugMode = false;
+
 
 	public static void println(String line) {
-		if (outputLabel == null) {
+		if (debugMode || (outputLabel == null)) {
 			System.out.println(line);
-		} else {
+		}
+		if (outputLabel != null) {
 			outputLabel.setText(line);
 		}
 	}
 
 	public static void message(String line) {
-		if (outputLabel == null) {
+		if (debugMode || (outputLabel == null)) {
 			System.out.println(line);
-		} else {
+		}
+		if (outputLabel != null) {
 			GuiUtils.notify(line);
 			outputLabel.setText(line);
 		}
@@ -50,6 +54,9 @@ public class OutputUtils {
 		if (errorMemo == null) {
 			System.err.println(line);
 		} else {
+			if (debugMode) {
+				System.out.println(line);
+			}
 			errorText.append(line);
 			errorText.append("\n");
 			errorMemo.setText(errorText.toString());
@@ -103,6 +110,14 @@ public class OutputUtils {
 		if ((targetLabel != null) && (target != null)) {
 			targetLabel.setText(target);
 		}
+	}
+
+	public static boolean getDebugMode() {
+		return debugMode;
+	}
+
+	public static void setDebugMode(boolean debugModeArg) {
+		debugMode = debugModeArg;
 	}
 
 }

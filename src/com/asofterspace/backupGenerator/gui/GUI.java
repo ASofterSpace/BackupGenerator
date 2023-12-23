@@ -211,6 +211,18 @@ public class GUI extends MainWindow {
 		});
 		settings.add(toggleReportAllActions);
 
+		JCheckBoxMenuItem toggleDebug = new JCheckBoxMenuItem("Debug Mode (Forward Output to System.out)");
+		toggleDebug.setState(false);
+		toggleDebug.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				boolean newVal = !OutputUtils.getDebugMode();
+				OutputUtils.setDebugMode(newVal);
+				toggleDebug.setState(newVal);
+			}
+		});
+		settings.add(toggleDebug);
+
 		JMenu huh = new JMenu("?");
 
 		JMenuItem openConfigPath = new JMenuItem("Open Config Path");
