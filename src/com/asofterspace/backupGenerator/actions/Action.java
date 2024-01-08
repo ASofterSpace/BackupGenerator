@@ -24,6 +24,8 @@ public class Action {
 	// 2 .. write two backups (the older one is being updated while the newer one is ignored)
 	private Integer replicationFactor;
 
+	private Boolean indexRemoteFiles;
+
 
 	public Action(Record rec) {
 
@@ -34,6 +36,8 @@ public class Action {
 		this.sourcePaths = rec.getArrayAsStringList("sourcePaths");
 
 		this.replicationFactor = rec.getInteger("replicationFactor");
+
+		this.indexRemoteFiles = rec.getBoolean("indexRemoteFiles", false);
 	}
 
 	public Record toRecord() {
@@ -47,6 +51,8 @@ public class Action {
 		result.set("sourcePaths", sourcePaths);
 
 		result.set("replicationFactor", replicationFactor);
+
+		result.set("indexRemoteFiles", indexRemoteFiles);
 
 		return result;
 	}
@@ -68,6 +74,13 @@ public class Action {
 			return 1;
 		}
 		return replicationFactor;
+	}
+
+	public boolean getIndexRemoteFiles() {
+		if (indexRemoteFiles == null) {
+			return false;
+		}
+		return indexRemoteFiles;
 	}
 
 }

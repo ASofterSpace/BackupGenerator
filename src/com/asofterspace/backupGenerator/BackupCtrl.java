@@ -298,7 +298,7 @@ public class BackupCtrl {
 			}
 		}
 
-		performAction(action.getKind(), sources, destination, "");
+		performAction(action.getKind(), sources, destination, "", action.getIndexRemoteFiles());
 
 		if (cancelled) {
 			return "cancelled";
@@ -312,7 +312,8 @@ public class BackupCtrl {
 		return destination.getLocalDirname();
 	}
 
-	private void performAction(String kind, List<Directory> sources, Directory destination, String curRelPath) {
+	private void performAction(String kind, List<Directory> sources, Directory destination,
+		String curRelPath, boolean indexRemoteFiles) {
 
 		OutputUtils.printDir(kind + "ing " + curRelPath + "...");
 
@@ -533,7 +534,7 @@ public class BackupCtrl {
 			childDirs.addAll(curSource.getAllDirectories(recursively));
 		}
 		for (Directory childDir : childDirs) {
-			performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/");
+			performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false);
 		}
 
 		if ("sync".equals(kind)) {
@@ -578,6 +579,35 @@ public class BackupCtrl {
 				if (deletedInSource) {
 					destChild.delete();
 				}
+			}
+		}
+
+		if (indexRemoteFiles) {
+			recursively = false;
+			List<Directory> destDirs = curDestination.getAllDirectories(recursively);
+
+			recursively = true;
+			for (Directory destDir : destDirs) {
+				List<File> destFiles = destDir.getAllFiles(recursively);
+				StringBuilder indexContent = new StringBuilder();
+				String dirName = destDir.getCanonicalDirname();
+				for (File destFile : destFiles) {
+					String fileName = destFile.getCanonicalFilename();
+					if (fileName.startsWith(dirName)) {
+						fileName = fileName.substring(dirName.length());
+					}
+					indexContent.append(fileName);
+					indexContent.append("\n");
+				}
+				String indexStr = indexContent.toString();
+				String INDEX_FILE_NAME = "remote_index.txt";
+
+				for (Directory source : sources) {
+					TextFile sourceIndexFile = new TextFile(new Directory(source, destDir.getLocalDirname()), INDEX_FILE_NAME);
+					sourceIndexFile.saveContent(indexStr);
+				}
+				TextFile destIndexFile = new TextFile(destDir, INDEX_FILE_NAME);
+				destIndexFile.saveContent(indexStr);
 			}
 		}
 	}
