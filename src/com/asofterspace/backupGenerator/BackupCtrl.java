@@ -596,6 +596,14 @@ public class BackupCtrl {
 					if (fileName.startsWith(dirName)) {
 						fileName = fileName.substring(dirName.length());
 					}
+					if (fileName.startsWith("\\")) {
+						fileName = fileName.substring(1);
+					}
+					if (fileName.startsWith("/")) {
+						fileName = fileName.substring(1);
+					}
+					fileName = StrUtils.replaceLast(fileName, "\\", " > ");
+					fileName = StrUtils.replaceLast(fileName, "/", " > ");
 					indexContent.append(fileName);
 					indexContent.append("\n");
 				}
