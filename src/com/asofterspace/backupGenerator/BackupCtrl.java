@@ -239,20 +239,22 @@ public class BackupCtrl {
 
 		} else {
 
-			Directory datedDestinationToday = new Directory(destinationParent, action.getDestinationName() +
-				" (" + StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ")");
-
 			OutputUtils.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
-				datedDestinationToday.getAbsoluteDirname() + " with replication factor " + replicationFactor + "...");
+				destinationParent.getCanonicalDirname() + " > " + action.getDestinationName() +
+				" with replication factor " + replicationFactor + "...");
 
 			boolean recursively = false;
 			List<Directory> destDirs = destinationParent.getAllDirectories(recursively);
 			List<Directory> existingDestDirs = new ArrayList<>();
 			for (Directory destDir : destDirs) {
 				if (destDir.getLocalDirname().startsWith(action.getDestinationName() + " (")) {
+					OutputUtils.println("Considering whether " + destDir.getCanonicalDirname() + " is a destination directory...");
 					// ignore non-dated directories (e.g. movies (just in) should be ignored)
 					if (getDateFromDirectory(destDir) != null) {
 						existingDestDirs.add(destDir);
+						OutputUtils.println("Yes, because it has a date attached!");
+					} else {
+						OutputUtils.println("No, because it has no date attached!");
 					}
 				}
 			}
@@ -275,6 +277,9 @@ public class BackupCtrl {
 				existingDestDirs.get(0).delete();
 				existingDestDirs.remove(0);
 			}
+
+			Directory datedDestinationToday = new Directory(destinationParent, action.getDestinationName() +
+				" (" + StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ")");
 
 			if (existingDestDirs.size() == replicationFactor) {
 
@@ -587,11 +592,16 @@ public class BackupCtrl {
 			List<Directory> destDirs = curDestination.getAllDirectories(recursively);
 
 			recursively = true;
+			String INDEX_FILE_NAME = "remote_index.txt";
+
 			for (Directory destDir : destDirs) {
 				List<File> destFiles = destDir.getAllFiles(recursively);
 				StringBuilder indexContent = new StringBuilder();
 				String dirName = destDir.getCanonicalDirname();
 				for (File destFile : destFiles) {
+					if (INDEX_FILE_NAME.equals(destFile.getLocalFilename())) {
+						continue;
+					}
 					String fileName = destFile.getCanonicalFilename();
 					if (fileName.startsWith(dirName)) {
 						fileName = fileName.substring(dirName.length());
@@ -608,7 +618,6 @@ public class BackupCtrl {
 					indexContent.append("\n");
 				}
 				String indexStr = indexContent.toString();
-				String INDEX_FILE_NAME = "remote_index.txt";
 
 				for (Directory source : sources) {
 					TextFile sourceIndexFile = new TextFile(new Directory(source, destDir.getLocalDirname()), INDEX_FILE_NAME);
