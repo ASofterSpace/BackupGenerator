@@ -21,8 +21,10 @@ import javax.swing.SwingUtilities;
 public class BackupGenerator {
 
 	public final static String PROGRAM_TITLE = "BackupGenerator";
-	public final static String VERSION_NUMBER = "0.0.1.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "15. September 2020 - 8. January 2024";
+	public final static String VERSION_NUMBER = "0.0.1.3(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "15. September 2020 - 11. December 2024";
+
+	public final static String USE_STATUS_FILE = "useStatusFile";
 
 	private static ConfigFile config;
 
@@ -51,15 +53,33 @@ public class BackupGenerator {
 			}
 		}
 
-		OutputUtils.println("Saving run-file...");
+		try {
+			// load config
+			config = new ConfigFile("settings", true);
 
-		if (BACKUP_RUN_FILE.exists()) {
-			GuiUtils.notify("Refusing to start as previous backup run is not yet finished!\n" +
-				"(" + BACKUP_RUN_FILE.getCanonicalFilename() + " exists)");
-			return;
+			// create a default config file, if necessary
+			if (config.getAllContents().isEmpty()) {
+				config.setAllContents(new JSON("{}"));
+			}
+		} catch (JsonParseException e) {
+			System.err.println("Loading the settings failed:");
+			System.err.println(e);
+			System.exit(1);
 		}
 
-		BACKUP_RUN_FILE.saveContent("Started backup run at " + DateUtils.serializeDateTime(DateUtils.now()));
+		final Boolean useStatusFile = config.getBoolean(USE_STATUS_FILE, true);
+
+		if (useStatusFile) {
+			OutputUtils.println("Saving status file...");
+
+			if (BACKUP_RUN_FILE.exists()) {
+				GuiUtils.notify("Refusing to start as previous backup run is not yet finished!\n" +
+					"(" + BACKUP_RUN_FILE.getCanonicalFilename() + " exists)");
+				return;
+			}
+
+			BACKUP_RUN_FILE.saveContent("Started backup run at " + DateUtils.serializeDateTime(DateUtils.now()));
+		}
 
 		OutputUtils.println("Loading database...");
 
@@ -74,20 +94,6 @@ public class BackupGenerator {
 		BackupCtrl backupCtrl = new BackupCtrl(database);
 
 		OutputUtils.println("Starting GUI...");
-
-		try {
-			// load config
-			config = new ConfigFile("settings", true);
-
-			// create a default config file, if necessary
-			if (config.getAllContents().isEmpty()) {
-				config.setAllContents(new JSON("{}"));
-			}
-		} catch (JsonParseException e) {
-			System.err.println("Loading the settings failed:");
-			System.err.println(e);
-			System.exit(1);
-		}
 
 		SwingUtilities.invokeLater(new GUI(backupCtrl, config));
 
