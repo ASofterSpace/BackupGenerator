@@ -21,17 +21,18 @@ import javax.swing.SwingUtilities;
 public class BackupGenerator {
 
 	public final static String PROGRAM_TITLE = "BackupGenerator";
-	public final static String VERSION_NUMBER = "0.0.1.3(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "15. September 2020 - 11. December 2024";
+	public final static String VERSION_NUMBER = "0.0.1.4(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "15. September 2020 - 3. January 2025";
 
 	public final static String USE_STATUS_FILE = "useStatusFile";
+	public final static String STATUS_FILE_PATH = "statusFilePath";
 
 	private static ConfigFile config;
 
 	private static volatile boolean guiVisible = false;
 
 	// synchronize with browser
-	public static TextFile BACKUP_RUN_FILE = new TextFile("C:\\home\\BACKUP.TXT");
+	public static TextFile BACKUP_RUN_FILE;
 
 
 	public static void main(String[] args) {
@@ -70,13 +71,19 @@ public class BackupGenerator {
 		final Boolean useStatusFile = config.getBoolean(USE_STATUS_FILE, true);
 
 		if (useStatusFile) {
-			OutputUtils.println("Saving status file...");
+			String statusFilePath = config.getValue(STATUS_FILE_PATH);
+			if (statusFilePath == null) {
+				statusFilePath = "C:\\home\\BACKUP.TXT";
+			}
+			BACKUP_RUN_FILE = new TextFile(statusFilePath);
 
 			if (BACKUP_RUN_FILE.exists()) {
 				GuiUtils.notify("Refusing to start as previous backup run is not yet finished!\n" +
 					"(" + BACKUP_RUN_FILE.getCanonicalFilename() + " exists)");
 				return;
 			}
+
+			OutputUtils.println("Saving status file " + statusFilePath + "...");
 
 			BACKUP_RUN_FILE.saveContent("Started backup run at " + DateUtils.serializeDateTime(DateUtils.now()));
 		}

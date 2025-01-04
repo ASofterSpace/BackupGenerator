@@ -138,7 +138,9 @@ public class BackupCtrl {
 		logFile.setContent(OutputUtils.getErrorLogContent());
 		logFile.save();
 
-		BackupGenerator.BACKUP_RUN_FILE.delete();
+		if (BackupGenerator.BACKUP_RUN_FILE != null) {
+			BackupGenerator.BACKUP_RUN_FILE.delete();
+		}
 
 		String smiley = "._.";
 		if (finalRunStr.startsWith("done")) {
@@ -151,15 +153,27 @@ public class BackupCtrl {
 	private List<IdentifiedTarget> identifyTargets() {
 
 		List<TargetDrive> possibleTargets = database.getTargets();
+		List<Directory> driveMountPoints = database.getDriveMountPoints();
+
+		System.out.println("");
+		System.out.println("Looking for all of these targets:");
+		for (TargetDrive possibleTarget : possibleTargets) {
+			System.out.println(possibleTarget.getName() + ".txt");
+		}
+		System.out.println("");
+		System.out.println("In all of these drive mount points:");
+		for (Directory driveMountPoint : driveMountPoints) {
+			System.out.println(driveMountPoint.getAbsoluteDirname());
+		}
+		System.out.println("");
 
 		List<IdentifiedTarget> result = new ArrayList<>();
 
 		for (TargetDrive possibleTarget : possibleTargets) {
-			for (char driveLetter = 'A'; driveLetter < 'Z'; driveLetter++) {
-				Directory targetDir = new Directory("" + driveLetter + ":\\");
-				File targetIdFile = new File(targetDir, possibleTarget.getName() + ".txt");
+			for (Directory driveMountPoint : driveMountPoints) {
+				File targetIdFile = new File(driveMountPoint, possibleTarget.getName() + ".txt");
 				if (targetIdFile.exists()) {
-					result.add(new IdentifiedTarget(possibleTarget, targetDir));
+					result.add(new IdentifiedTarget(possibleTarget, driveMountPoint));
 				}
 			}
 		}

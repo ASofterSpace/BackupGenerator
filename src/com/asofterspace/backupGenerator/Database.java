@@ -5,6 +5,7 @@
 package com.asofterspace.backupGenerator;
 
 import com.asofterspace.backupGenerator.target.TargetDrive;
+import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.io.JsonFile;
 import com.asofterspace.toolbox.io.JsonParseException;
@@ -21,6 +22,8 @@ public class Database {
 	private JSON root;
 
 	private List<TargetDrive> targets;
+
+	private List<String> mountpoints;
 
 
 	public Database() {
@@ -42,6 +45,8 @@ public class Database {
 		for (Record rec : targetRecs) {
 			targets.add(new TargetDrive(rec));
 		}
+
+		mountpoints = root.getArrayAsStringList("mountpoints");
 	}
 
 	public Record getRoot() {
@@ -68,4 +73,18 @@ public class Database {
 		return targets;
 	}
 
+	public List<Directory> getDriveMountPoints() {
+		List<Directory> result = new ArrayList<>();
+		if (mountpoints != null) {
+			for (String mountpoint : mountpoints) {
+				result.add(new Directory(mountpoint));
+			}
+		}
+		if (result.size() < 1) {
+			for (char driveLetter = 'A'; driveLetter < 'Z'; driveLetter++) {
+				result.add(new Directory("" + driveLetter + ":\\"));
+			}
+		}
+		return result;
+	}
 }
