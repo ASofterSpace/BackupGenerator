@@ -11,11 +11,20 @@ import java.util.List;
 
 public class Action {
 
+	private static final String DESTINATION_NAME = "destinationName";
+	private static final String INDEX_REMOTE_FILES = "indexRemoteFiles";
+	private static final String KIND = "kind";
+	private static final String REPLICATION_FACTOR = "replicationFactor";
+	private static final String IGNORE = "ignore";
+	private static final String SOURCE_PATHS = "sourcePaths";
+
 	// "sync" (write files to destination and delete files from destination which are in no source) or
 	// "writeonly" (write files to destination but do not delete anything from destination) are allowed
 	private String kind;
 
 	private String destinationName;
+
+	private List<String> ignore;
 
 	private List<String> sourcePaths;
 
@@ -29,30 +38,34 @@ public class Action {
 
 	public Action(Record rec) {
 
-		this.kind = rec.getString("kind");
+		this.kind = rec.getString(KIND);
 
-		this.destinationName = rec.getString("destinationName");
+		this.destinationName = rec.getString(DESTINATION_NAME);
 
-		this.sourcePaths = rec.getArrayAsStringList("sourcePaths");
+		this.ignore = rec.getArrayAsStringList(IGNORE);
 
-		this.replicationFactor = rec.getInteger("replicationFactor");
+		this.sourcePaths = rec.getArrayAsStringList(SOURCE_PATHS);
 
-		this.indexRemoteFiles = rec.getBoolean("indexRemoteFiles", false);
+		this.replicationFactor = rec.getInteger(REPLICATION_FACTOR);
+
+		this.indexRemoteFiles = rec.getBoolean(INDEX_REMOTE_FILES, false);
 	}
 
 	public Record toRecord() {
 
 		Record result = Record.emptyObject();
 
-		result.set("kind", kind);
+		result.set(KIND, kind);
 
-		result.set("destinationName", destinationName);
+		result.set(DESTINATION_NAME, destinationName);
 
-		result.set("sourcePaths", sourcePaths);
+		result.set(IGNORE, ignore);
 
-		result.set("replicationFactor", replicationFactor);
+		result.set(SOURCE_PATHS, sourcePaths);
 
-		result.set("indexRemoteFiles", indexRemoteFiles);
+		result.set(REPLICATION_FACTOR, replicationFactor);
+
+		result.set(INDEX_REMOTE_FILES, indexRemoteFiles);
 
 		return result;
 	}
@@ -63,6 +76,10 @@ public class Action {
 
 	public String getDestinationName() {
 		return destinationName;
+	}
+
+	public List<String> getIgnore() {
+		return ignore;
 	}
 
 	public List<String> getSourcePaths() {

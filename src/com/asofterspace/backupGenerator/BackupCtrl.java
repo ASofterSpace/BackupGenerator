@@ -317,7 +317,7 @@ public class BackupCtrl {
 			}
 		}
 
-		performAction(action.getKind(), sources, destination, "", action.getIndexRemoteFiles());
+		performAction(action.getKind(), sources, destination, "", action.getIndexRemoteFiles(), action.getIgnore());
 
 		if (cancelled) {
 			return "cancelled";
@@ -332,7 +332,7 @@ public class BackupCtrl {
 	}
 
 	private void performAction(String kind, List<Directory> sources, Directory destination,
-		String curRelPath, boolean indexRemoteFiles) {
+		String curRelPath, boolean indexRemoteFiles, List<String> ignore) {
 
 		OutputUtils.printDir(kind + "ing " + curRelPath + "...");
 
@@ -359,7 +359,15 @@ public class BackupCtrl {
 
 		List<File> childFiles = new ArrayList<>();
 		for (Directory curSource : curSources) {
-			childFiles.addAll(curSource.getAllFiles(recursively));
+			if ((ignore == null) || (ignore.size() < 1)) {
+				childFiles.addAll(curSource.getAllFiles(recursively));
+			} else {
+				for (File childFile : curSource.getAllFiles(recursively)) {
+					if (!ignore.contains(childFile.getLocalFilename())) {
+						childFiles.add(childFile);
+					}
+				}
+			}
 		}
 		for (File sourceFile : childFiles) {
 			boolean didPause = false;
@@ -550,10 +558,19 @@ public class BackupCtrl {
 
 		List<Directory> childDirs = new ArrayList<>();
 		for (Directory curSource : curSources) {
-			childDirs.addAll(curSource.getAllDirectories(recursively));
+			if ((ignore == null) || (ignore.size() < 1)) {
+				childDirs.addAll(curSource.getAllDirectories(recursively));
+			} else {
+				for (Directory childDir : curSource.getAllDirectories(recursively)) {
+					if (!ignore.contains(childDir.getLocalDirname())) {
+						childDirs.add(childDir);
+					}
+				}
+			}
 		}
 		for (Directory childDir : childDirs) {
-			performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false);
+			// set ignore to null as we only want to ignore top-level directories
+			performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false, null);
 		}
 
 		if ("sync".equals(kind)) {
