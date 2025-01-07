@@ -91,6 +91,7 @@ public class BackupCtrl {
 				String actionLog = "error";
 				try {
 					actionLog = startAction(action, sourcePaths, destinationParent, replicationFactor, targets);
+					// System.out.println("DEBUG after startAction");
 				} catch (Throwable t) {
 					StringWriter strWr = new StringWriter();
 					PrintWriter prWr = new PrintWriter(strWr);
@@ -106,6 +107,8 @@ public class BackupCtrl {
 					log.saveContent(logLines);
 					actionLogs.add(actionLog);
 				}
+
+				// System.out.println("DEBUG couldfinalizeRun " + cancelled);
 
 				if (cancelled) {
 					finalizeRun(finalRunStr);
@@ -132,6 +135,8 @@ public class BackupCtrl {
 	}
 
 	private void finalizeRun(String finalRunStr) {
+
+		// System.out.println("DEBUG callingFinalizeRun()");
 
 		String logFileName = StrUtils.replaceAll(DateUtils.serializeDate(DateUtils.now()), "-", " ") + ".log";
 		TextFile logFile = new TextFile(logFileName);
@@ -360,8 +365,10 @@ public class BackupCtrl {
 		List<File> childFiles = new ArrayList<>();
 		for (Directory curSource : curSources) {
 			if ((ignore == null) || (ignore.size() < 1)) {
+				// System.out.println("DEBUBfiles1");
 				childFiles.addAll(curSource.getAllFiles(recursively));
 			} else {
+				// System.out.println("DEBUGfiles2");
 				for (File childFile : curSource.getAllFiles(recursively)) {
 					if (!ignore.contains(childFile.getLocalFilename())) {
 						childFiles.add(childFile);
@@ -369,6 +376,8 @@ public class BackupCtrl {
 				}
 			}
 		}
+		// System.out.println("DEBUG childFiles: [" + StrUtils.join(",", childFiles) + "]");
+
 		for (File sourceFile : childFiles) {
 			boolean didPause = false;
 			while (paused) {
@@ -559,8 +568,10 @@ public class BackupCtrl {
 		List<Directory> childDirs = new ArrayList<>();
 		for (Directory curSource : curSources) {
 			if ((ignore == null) || (ignore.size() < 1)) {
+				// System.out.println("DEBUGdirs1");
 				childDirs.addAll(curSource.getAllDirectories(recursively));
 			} else {
+				// System.out.println("DEBUGdirs2");
 				for (Directory childDir : curSource.getAllDirectories(recursively)) {
 					if (!ignore.contains(childDir.getLocalDirname())) {
 						childDirs.add(childDir);
@@ -568,9 +579,26 @@ public class BackupCtrl {
 				}
 			}
 		}
+		// System.out.println("DEBUG childDirs: [" + StrUtils.join(",", childDirs) + "]");
+
 		for (Directory childDir : childDirs) {
 			// set ignore to null as we only want to ignore top-level directories
 			performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false, null);
+
+			boolean didPause = false;
+			while (paused) {
+				didPause = true;
+				OutputUtils.println("    [paused]");
+				Utils.sleep(1000);
+			}
+			if (didPause) {
+				OutputUtils.println("    [resumed]");
+			}
+
+			if (cancelled) {
+				OutputUtils.println("    [cancelled]");
+				return;
+			}
 		}
 
 		if ("sync".equals(kind)) {

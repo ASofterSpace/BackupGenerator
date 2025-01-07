@@ -64,17 +64,17 @@ public class GUI extends MainWindow {
 		this.backupCtrl = backupCtrl;
 
 		this.configuration = config;
+
+		// enable anti-aliasing for swing
+		System.setProperty("swing.aatext", "true");
+		// enable anti-aliasing for awt
+		System.setProperty("awt.useSystemAAFontSettings", "on");
 	}
 
 	@Override
 	public void run() {
 
 		super.create();
-
-		// enable anti-aliasing for swing
-		System.setProperty("swing.aatext", "true");
-		// enable anti-aliasing for awt
-		System.setProperty("awt.useSystemAAFontSettings", "on");
 
 		refreshTitleBar();
 
