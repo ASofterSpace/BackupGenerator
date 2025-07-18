@@ -322,7 +322,7 @@ public class BackupCtrl {
 			}
 		}
 
-		performAction(action.getKind(), sources, destination, "", action.getIndexRemoteFiles(), action.getIgnore());
+		performAction(action.getKind(), sources, destination, "", action.getIndexRemoteFiles(), action.getIgnore(), 0, null);
 
 		if (cancelled) {
 			return "cancelled";
@@ -336,12 +336,10 @@ public class BackupCtrl {
 		return destination.getLocalDirname();
 	}
 
-	private void performAction(String kind, List<Directory> sources, Directory destination,
-		String curRelPath, boolean indexRemoteFiles, List<String> ignore) {
+	private int performAction(String kind, List<Directory> sources, Directory destination,
+		String curRelPath, boolean indexRemoteFiles, List<String> ignore, int fileCounter, Integer fileCounterTarget) {
 
 		OutputUtils.printDir(kind + "ing " + curRelPath + "...");
-
-		boolean recursively = false;
 
 		List<Directory> curSources = new ArrayList<>();
 		for (Directory source : sources) {
@@ -353,7 +351,7 @@ public class BackupCtrl {
 			OutputUtils.printerrln("Encountered a directory whose name ends with a space: '" +
 				curDestination.getAbsoluteDirname() + "' - ignoring this directory completely " +
 				"to prevent problems...");
-			return;
+			return fileCounter;
 		}
 
 		if (OutputUtils.getPrintDirectories()) {
@@ -361,6 +359,17 @@ public class BackupCtrl {
 		}
 
 		curDestination.create();
+
+		boolean recursively = true;
+
+		if (fileCounterTarget == null) {
+			fileCounterTarget = 0;
+			for (Directory curSource : curSources) {
+				fileCounterTarget += curSource.getAllFiles(recursively).size();
+			}
+		}
+
+		recursively = false;
 
 		List<File> childFiles = new ArrayList<>();
 		for (Directory curSource : curSources) {
@@ -379,6 +388,7 @@ public class BackupCtrl {
 		// System.out.println("DEBUG childFiles: [" + StrUtils.join(",", childFiles) + "]");
 
 		for (File sourceFile : childFiles) {
+			fileCounter++;
 			boolean didPause = false;
 			while (paused) {
 				didPause = true;
@@ -391,7 +401,7 @@ public class BackupCtrl {
 
 			if (cancelled) {
 				OutputUtils.println("    [cancelled]");
-				return;
+				return fileCounter;
 			}
 
 			File destFile = new File(curDestination, sourceFile.getLocalFilename());
@@ -410,7 +420,7 @@ public class BackupCtrl {
 						checkCounter++;
 						if (reportAllActions || (checkCounter > 2048)) {
 							checkCounter = 0;
-							OutputUtils.println("    checking " + sourceFile.getAbsoluteFilename() +
+							OutputUtils.println("    checking " + fileCounter + " / " + fileCounterTarget + ": " + sourceFile.getAbsoluteFilename() +
 								"... identical to " + destFile.getAbsoluteFilename());
 						}
 						continue;
@@ -430,7 +440,7 @@ public class BackupCtrl {
 			if (reportAllActions || reportChangingActions || (copyCounter > 1024)) {
 				copyCounter = 0;
 
-				OutputUtils.println("    copying " + sourceFile.getAbsoluteFilename() + " to " +
+				OutputUtils.println("    copying " + fileCounter + " / " + fileCounterTarget + ": " + sourceFile.getAbsoluteFilename() + " to " +
 					destFile.getAbsoluteFilename());
 			}
 
@@ -546,7 +556,7 @@ public class BackupCtrl {
 
 				if (cancelled) {
 					OutputUtils.println("    [cancelled]");
-					return;
+					return fileCounter;
 				}
 
 				boolean deletedInSource = true;
@@ -583,7 +593,8 @@ public class BackupCtrl {
 
 		for (Directory childDir : childDirs) {
 			// set ignore to null as we only want to ignore top-level directories
-			performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false, null);
+			fileCounter += performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false, null,
+				fileCounter, fileCounterTarget);
 
 			boolean didPause = false;
 			while (paused) {
@@ -597,7 +608,7 @@ public class BackupCtrl {
 
 			if (cancelled) {
 				OutputUtils.println("    [cancelled]");
-				return;
+				return fileCounter;
 			}
 		}
 
@@ -629,7 +640,7 @@ public class BackupCtrl {
 
 				if (cancelled) {
 					OutputUtils.println("    [cancelled]");
-					return;
+					return fileCounter;
 				}
 
 				boolean deletedInSource = true;
@@ -686,6 +697,8 @@ public class BackupCtrl {
 				destIndexFile.saveContent(indexStr);
 			}
 		}
+
+		return fileCounter;
 	}
 
 	private String toOneLine(IOException e) {
