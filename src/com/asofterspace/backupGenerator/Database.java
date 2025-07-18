@@ -17,6 +17,10 @@ import java.util.List;
 
 public class Database {
 
+	private static final String TARGETS = "targets";
+	private static final String MOUNTPOINTS = "mountpoints";
+	private static final String MOUNTPOINT_ANY = "%ANY%";
+
 	private JsonFile dbFile;
 
 	private JSON root;
@@ -38,7 +42,7 @@ public class Database {
 			System.exit(1);
 		}
 
-		List<Record> targetRecs = root.getArray("targets");
+		List<Record> targetRecs = root.getArray(TARGETS);
 
 		this.targets = new ArrayList<>();
 
@@ -46,7 +50,7 @@ public class Database {
 			targets.add(new TargetDrive(rec));
 		}
 
-		mountpoints = root.getArrayAsStringList("mountpoints");
+		mountpoints = root.getArrayAsStringList(MOUNTPOINTS);
 	}
 
 	public Record getRoot() {
@@ -63,7 +67,7 @@ public class Database {
 			targetRecs.add(obj.toRecord());
 		}
 
-		root.set("targets", targetRecs);
+		root.set(TARGETS, targetRecs);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -77,7 +81,19 @@ public class Database {
 		List<Directory> result = new ArrayList<>();
 		if (mountpoints != null) {
 			for (String mountpoint : mountpoints) {
-				result.add(new Directory(mountpoint));
+				if (mountpoint.endsWith(MOUNTPOINT_ANY) || mountpoint.endsWith(MOUNTPOINT_ANY + "/") || mountpoint.endsWith(MOUNTPOINT_ANY + "\\")) {
+					// always do +1 as that will copy to ending with a trailing (back)slash if it ends with one or to ending without one
+					// but both is fine
+					mountpoint = mountpoint.substring(0, mountpoint.length() - (MOUNTPOINT_ANY.length() + 1));
+					Directory anyMountParentDir = new Directory(mountpoint);
+					boolean recursively = false;
+					List<Directory> subMountpoints = anyMountParentDir.getAllDirectories(recursively);
+					for (Directory subMountpoint : subMountpoints) {
+						result.add(subMountpoint);
+					}
+				} else {
+					result.add(new Directory(mountpoint));
+				}
 			}
 		}
 		if (result.size() < 1) {
