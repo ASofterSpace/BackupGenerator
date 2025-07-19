@@ -420,7 +420,7 @@ public class BackupCtrl {
 						checkCounter++;
 						if (reportAllActions || (checkCounter > 2048)) {
 							checkCounter = 0;
-							OutputUtils.println("    checking " + fileCounter + " / " + fileCounterTarget + ": " + sourceFile.getAbsoluteFilename() +
+							OutputUtils.println("    checking " + getCounterDisplayStr(fileCounter, fileCounterTarget) + sourceFile.getAbsoluteFilename() +
 								"... identical to " + destFile.getAbsoluteFilename());
 						}
 						continue;
@@ -440,7 +440,7 @@ public class BackupCtrl {
 			if (reportAllActions || reportChangingActions || (copyCounter > 1024)) {
 				copyCounter = 0;
 
-				OutputUtils.println("    copying " + fileCounter + " / " + fileCounterTarget + ": " + sourceFile.getAbsoluteFilename() + " to " +
+				OutputUtils.println("    copying " + getCounterDisplayStr(fileCounter, fileCounterTarget) + sourceFile.getAbsoluteFilename() + " to " +
 					destFile.getAbsoluteFilename());
 			}
 
@@ -754,6 +754,13 @@ public class BackupCtrl {
 		dateStr = dateStr.substring(0, dateStr.length() - 1);
 
 		return DateUtils.parseDate(dateStr);
+	}
+
+	private static String getCounterDisplayStr(int fileCounter, int fileCounterTarget) {
+		if (fileCounterTarget < 1) {
+			fileCounterTarget = 1;
+		}
+		return fileCounter + " / " + fileCounterTarget + " (" + ((fileCounter * 100) / fileCounterTarget) + "%): ";
 	}
 
 }
