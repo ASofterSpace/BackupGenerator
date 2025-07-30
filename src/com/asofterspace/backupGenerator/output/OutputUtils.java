@@ -48,8 +48,12 @@ public class OutputUtils {
 		}
 	}
 
-	public static void printerrln(String line) {
-		line = "[ERROR] " + line;
+	public static void printerrln(String line, boolean isError) {
+		if (isError) {
+			line = "[ERROR] " + line;
+		} else {
+			line = "[INFO] " + line;
+		}
 
 		if (errorMemo == null) {
 			System.err.println(line);

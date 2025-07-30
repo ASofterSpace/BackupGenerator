@@ -42,10 +42,12 @@ public class BackupCtrl {
 
 	private boolean reportAllActions = false;
 	private boolean reportChangingActions = true;
+	private boolean outputAsIfSync = true;
 
 
-	public BackupCtrl(Database database) {
+	public BackupCtrl(Database database, boolean outputAsIfSync) {
 		this.database = database;
+		this.outputAsIfSync = outputAsIfSync;
 	}
 
 	public void start() {
@@ -350,7 +352,7 @@ public class BackupCtrl {
 		if (curDestination.getDirname().endsWith(" ")) {
 			OutputUtils.printerrln("Encountered a directory whose name ends with a space: '" +
 				curDestination.getAbsoluteDirname() + "' - ignoring this directory completely " +
-				"to prevent problems...");
+				"to prevent problems...", true);
 			return fileCounter;
 		}
 
@@ -521,16 +523,22 @@ public class BackupCtrl {
 						// ... and in case of another failure, actually complain about it!
 						OutputUtils.printerrln("The file " + sourceFile.getAbsoluteFilename() + " could not be copied to " +
 							destFile.getAbsoluteFilename() + " due to first " + toOneLine(e1) + " and then " + toOneLine(e2) +
-							" in the second attempt!");
+							" in the second attempt!", true);
 					}
 				}
 			}
 		}
 
-		if ("sync".equals(kind)) {
+		boolean sync = "sync".equals(kind);
+
+		if (sync || outputAsIfSync) {
 
 			if (reportAllActions) {
-				OutputUtils.println("    syncing files...");
+				if (sync) {
+					OutputUtils.println("    syncing files...");
+				} else {
+					OutputUtils.println("    output-as-if-syncing files...");
+				}
 			}
 
 			// in case of sync, delete files in the destination which are not in the source
@@ -570,7 +578,11 @@ public class BackupCtrl {
 					}
 				}
 				if (deletedInSource) {
-					destChild.delete();
+					if (sync) {
+						destChild.delete();
+					} else {
+						OutputUtils.printerrln("Would delete " + destChild.getAbsoluteFilename() + " if we were not in writeonly mode!", false);
+					}
 				}
 			}
 		}
@@ -612,12 +624,16 @@ public class BackupCtrl {
 			}
 		}
 
-		if ("sync".equals(kind)) {
+		if (sync || outputAsIfSync) {
 			// in case of sync, delete child directories in the destination which are not in the source
 			List<Directory> destChildren = curDestination.getAllDirectories(recursively);
 
 			if (reportAllActions) {
-				OutputUtils.println("    syncing directories...");
+				if (sync) {
+					OutputUtils.println("    syncing directories...");
+				} else {
+					OutputUtils.println("    output-as-if-syncing directories...");
+				}
 			}
 
 			List<String> sourceLocalDirnames = new ArrayList<>();
@@ -652,7 +668,11 @@ public class BackupCtrl {
 					}
 				}
 				if (deletedInSource) {
-					destChild.delete();
+					if (sync) {
+						destChild.delete();
+					} else {
+						OutputUtils.printerrln("Would delete " + destChild.getAbsoluteDirname() + " if we were not in writeonly mode!", false);
+					}
 				}
 			}
 		}
