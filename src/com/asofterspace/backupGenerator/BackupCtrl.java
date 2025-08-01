@@ -42,12 +42,10 @@ public class BackupCtrl {
 
 	private boolean reportAllActions = false;
 	private boolean reportChangingActions = true;
-	private boolean outputAsIfSync = true;
 
 
-	public BackupCtrl(Database database, boolean outputAsIfSync) {
+	public BackupCtrl(Database database) {
 		this.database = database;
-		this.outputAsIfSync = outputAsIfSync;
 	}
 
 	public void start() {
@@ -237,6 +235,7 @@ public class BackupCtrl {
 			// allowed action kinds
 			case "sync":
 			case "writeonly":
+			case "writeonly-noreport":
 				break;
 			default:
 				OutputUtils.println("  UNKNOWN ACTION KIND " + action.getKind() + "!");
@@ -324,7 +323,7 @@ public class BackupCtrl {
 			}
 		}
 
-		performAction(action.getKind(), sources, destination, "", action.getIndexRemoteFiles(), action.getIgnore(), 0, null);
+		performAction(action.getKind(), sources, destination, "", action.getIndexRemoteFiles(), action.getIgnore(), 0);
 
 		if (cancelled) {
 			return "cancelled";
@@ -338,8 +337,8 @@ public class BackupCtrl {
 		return destination.getLocalDirname();
 	}
 
-	private int performAction(String kind, List<Directory> sources, Directory destination,
-		String curRelPath, boolean indexRemoteFiles, List<String> ignore, int fileCounter, Integer fileCounterTarget) {
+	private long performAction(String kind, List<Directory> sources, Directory destination,
+		String curRelPath, boolean indexRemoteFiles, List<String> ignore, long fileCounter) {
 
 		OutputUtils.printDir(kind + "ing " + curRelPath + "...");
 
@@ -363,13 +362,6 @@ public class BackupCtrl {
 		curDestination.create();
 
 		boolean recursively = true;
-
-		if (fileCounterTarget == null) {
-			fileCounterTarget = 0;
-			for (Directory curSource : curSources) {
-				fileCounterTarget += curSource.getAllFiles(recursively).size();
-			}
-		}
 
 		recursively = false;
 
@@ -422,7 +414,7 @@ public class BackupCtrl {
 						checkCounter++;
 						if (reportAllActions || (checkCounter > 2048)) {
 							checkCounter = 0;
-							OutputUtils.println("    checking " + getCounterDisplayStr(fileCounter, fileCounterTarget) + sourceFile.getAbsoluteFilename() +
+							OutputUtils.println("    checking " + getCounterDisplayStr(fileCounter) + sourceFile.getAbsoluteFilename() +
 								"... identical to " + destFile.getAbsoluteFilename());
 						}
 						continue;
@@ -442,7 +434,7 @@ public class BackupCtrl {
 			if (reportAllActions || reportChangingActions || (copyCounter > 1024)) {
 				copyCounter = 0;
 
-				OutputUtils.println("    copying " + getCounterDisplayStr(fileCounter, fileCounterTarget) + sourceFile.getAbsoluteFilename() + " to " +
+				OutputUtils.println("    copying " + getCounterDisplayStr(fileCounter) + sourceFile.getAbsoluteFilename() + " to " +
 					destFile.getAbsoluteFilename());
 			}
 
@@ -529,7 +521,12 @@ public class BackupCtrl {
 			}
 		}
 
+		// we actually sync
 		boolean sync = "sync".equals(kind);
+
+		// we don't sync, but we log output to see what would be done if we would sync
+		// (and for writeonly-noreport we do not output this at all so the whole block can be skipped)
+		boolean outputAsIfSync = "writeonly".equals(kind);
 
 		if (sync || outputAsIfSync) {
 
@@ -581,7 +578,7 @@ public class BackupCtrl {
 					if (sync) {
 						destChild.delete();
 					} else {
-						OutputUtils.printerrln("Would delete " + destChild.getAbsoluteFilename() + " if we were not in writeonly mode!", false);
+						OutputUtils.printerrln("Would delete " + destChild.getAbsoluteFilename() + " if we were not in " + kind + " mode!", false);
 					}
 				}
 			}
@@ -605,8 +602,7 @@ public class BackupCtrl {
 
 		for (Directory childDir : childDirs) {
 			// set ignore to null as we only want to ignore top-level directories
-			fileCounter += performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false, null,
-				fileCounter, fileCounterTarget);
+			fileCounter += performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false, null, fileCounter);
 
 			boolean didPause = false;
 			while (paused) {
@@ -671,7 +667,7 @@ public class BackupCtrl {
 					if (sync) {
 						destChild.delete();
 					} else {
-						OutputUtils.printerrln("Would delete " + destChild.getAbsoluteDirname() + " if we were not in writeonly mode!", false);
+						OutputUtils.printerrln("Would delete " + destChild.getAbsoluteDirname() + " if we were not in " + kind + " mode!", false);
 					}
 				}
 			}
@@ -776,11 +772,8 @@ public class BackupCtrl {
 		return DateUtils.parseDate(dateStr);
 	}
 
-	private static String getCounterDisplayStr(int fileCounter, int fileCounterTarget) {
-		if (fileCounterTarget < 1) {
-			fileCounterTarget = 1;
-		}
-		return fileCounter + " / " + fileCounterTarget + " (" + ((fileCounter * 100) / fileCounterTarget) + "%): ";
+	private static String getCounterDisplayStr(long fileCounter) {
+		return fileCounter + ": ";
 	}
 
 }

@@ -21,12 +21,11 @@ import javax.swing.SwingUtilities;
 public class BackupGenerator {
 
 	public final static String PROGRAM_TITLE = "BackupGenerator";
-	public final static String VERSION_NUMBER = "0.0.1.7(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "15. September 2020 - 30. July 2025";
+	public final static String VERSION_NUMBER = "0.0.1.8(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "15. September 2020 - 1. August 2025";
 
 	public final static String USE_STATUS_FILE = "useStatusFile";
 	public final static String STATUS_FILE_PATH = "statusFilePath";
-	public final static String OUTPUT_AS_IF_SYNC = "outputAsIfSync";
 
 	private static ConfigFile config;
 
@@ -89,8 +88,6 @@ public class BackupGenerator {
 			BACKUP_RUN_FILE.saveContent("Started backup run at " + DateUtils.serializeDateTime(DateUtils.now()));
 		}
 
-		final Boolean outputAsIfSync = config.getBoolean(OUTPUT_AS_IF_SYNC, false);
-
 		OutputUtils.println("Loading database...");
 
 		Database database = new Database();
@@ -101,7 +98,7 @@ public class BackupGenerator {
 
 		OutputUtils.println("Creating backup ctrl...");
 
-		BackupCtrl backupCtrl = new BackupCtrl(database, outputAsIfSync);
+		BackupCtrl backupCtrl = new BackupCtrl(database);
 
 		OutputUtils.println("Starting GUI...");
 
