@@ -13,6 +13,7 @@ import com.asofterspace.toolbox.io.Directory;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.DateUtils;
+import com.asofterspace.toolbox.utils.SortUtils;
 import com.asofterspace.toolbox.utils.StrUtils;
 import com.asofterspace.toolbox.Utils;
 
@@ -602,7 +603,7 @@ public class BackupCtrl {
 
 		for (Directory childDir : childDirs) {
 			// set ignore to null as we only want to ignore top-level directories
-			fileCounter += performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false, null, fileCounter);
+			fileCounter = performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false, null, fileCounter);
 
 			boolean didPause = false;
 			while (paused) {
@@ -682,8 +683,8 @@ public class BackupCtrl {
 
 			for (Directory destDir : destDirs) {
 				List<File> destFiles = destDir.getAllFiles(recursively);
-				StringBuilder indexContent = new StringBuilder();
 				String dirName = destDir.getCanonicalDirname();
+				List<String> indexContentList = new ArrayList<>();
 				for (File destFile : destFiles) {
 					if (INDEX_FILE_NAME.equals(destFile.getLocalFilename())) {
 						continue;
@@ -700,7 +701,12 @@ public class BackupCtrl {
 					}
 					fileName = StrUtils.replaceLast(fileName, "\\", " > ");
 					fileName = StrUtils.replaceLast(fileName, "/", " > ");
-					indexContent.append(fileName);
+					indexContentList.add(fileName);
+				}
+				indexContentList = SortUtils.sortAlphabetically(indexContentList);
+				StringBuilder indexContent = new StringBuilder();
+				for (String indexContentLine : indexContentList) {
+					indexContent.append(indexContentLine);
 					indexContent.append("\n");
 				}
 				String indexStr = indexContent.toString();
