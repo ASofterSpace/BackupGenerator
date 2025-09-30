@@ -41,7 +41,7 @@ public class BackupCtrl {
 	private volatile boolean paused = false;
 	private volatile boolean cancelled = false;
 
-	private boolean reportAllActions = false;
+	private boolean reportAllActions = true;
 	private boolean reportChangingActions = true;
 
 

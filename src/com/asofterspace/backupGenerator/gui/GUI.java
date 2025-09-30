@@ -228,6 +228,27 @@ public class GUI extends MainWindow {
 		});
 		settings.add(toggleDebug);
 
+		JMenu windowMenu = new JMenu("Window");
+		menu.add(windowMenu);
+
+		JMenuItem curItem = new JMenuItem("Copy Content");
+		curItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				GuiUtils.copyToClipboard(OutputUtils.getErrorLogContent());
+			}
+		});
+		windowMenu.add(curItem);
+
+		curItem = new JMenuItem("Clear Content");
+		curItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				OutputUtils.clearErrorLog();
+			}
+		});
+		windowMenu.add(curItem);
+
 		JMenu huh = new JMenu("?");
 
 		JMenuItem openConfigPath = new JMenuItem("Open Config Path");

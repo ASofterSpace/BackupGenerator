@@ -93,6 +93,13 @@ public class OutputUtils {
 		errorMemo = errorMemoArg;
 	}
 
+	public static void clearErrorLog() {
+		errorText = new StringBuilder();
+		if (errorMemo != null) {
+			errorMemo.setText("");
+		}
+	}
+
 	public static String getErrorLogContent() {
 		if (errorMemo == null) {
 			return "";
