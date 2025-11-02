@@ -158,7 +158,7 @@ public class BackupCtrl {
 
 	private List<IdentifiedTarget> identifyTargets() {
 
-		List<TargetDrive> possibleTargets = database.getTargets();
+		List<TargetDrive> possibleTargets = database.getTemplatedTargets();
 		List<Directory> driveMountPoints = database.getDriveMountPoints();
 
 		System.out.println("");

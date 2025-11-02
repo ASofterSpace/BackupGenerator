@@ -8,12 +8,18 @@ import com.asofterspace.backupGenerator.actions.Action;
 import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.TextFile;
 import com.asofterspace.toolbox.utils.Record;
+import com.asofterspace.toolbox.utils.StrUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class TargetDrive {
+
+	private static final String REPLACENAME = "%NAME%";
+	private static final String ACTIONS = "actions";
+	private static final String LOGFILE = "logfile";
+	private static final String NAME = "name";
 
 	// name is e.g. "hdd_13_1", which can then be searched for on each drive to identify such a drive
 	protected String name;
@@ -25,15 +31,15 @@ public class TargetDrive {
 
 	public TargetDrive(Record rec) {
 
-		this.name = rec.getString("name");
+		this.name = rec.getString(NAME);
 
-		List<Record> actionRecs = rec.getArray("actions");
+		List<Record> actionRecs = rec.getArray(ACTIONS);
 		this.actions = new ArrayList<>();
 		for (Record actionRec : actionRecs) {
 			this.actions.add(new Action(actionRec));
 		}
 
-		String logfileStr = rec.getString("logfile");
+		String logfileStr = rec.getString(LOGFILE);
 		if (logfileStr != null) {
 			this.logfile = new TextFile(logfileStr);
 		}
@@ -48,22 +54,38 @@ public class TargetDrive {
 		this.logfile = other.logfile;
 	}
 
+	public static List<TargetDrive> createFromTemplate(Record rec) {
+		List<TargetDrive> result = new ArrayList<>();
+		List<String> useAsTemplateFor = rec.getArrayAsStringList("useAsTemplateFor");
+		if ((useAsTemplateFor == null) || (useAsTemplateFor.size() < 1)) {
+			result.add(new TargetDrive(rec));
+		} else {
+			for (String templateName : useAsTemplateFor) {
+				Record curRec = rec.createDeepCopy();
+				curRec.setString(NAME, StrUtils.replaceAll(curRec.getString(NAME), REPLACENAME, templateName));
+				curRec.setString(LOGFILE, StrUtils.replaceAll(curRec.getString(LOGFILE), REPLACENAME, templateName));
+				result.add(new TargetDrive(curRec));
+			}
+		}
+		return result;
+	}
+
 	public Record toRecord() {
 
 		Record result = Record.emptyObject();
 
-		result.set("name", name);
+		result.set(NAME, name);
 
 		List<Record> actionRecs = new ArrayList<>();
 		for (Action action : actions) {
 			actionRecs.add(action.toRecord());
 		}
-		result.set("actions", actionRecs);
+		result.set(ACTIONS, actionRecs);
 
 		if (logfile == null) {
-			result.set("logfile", null);
+			result.set(LOGFILE, null);
 		} else {
-			result.set("logfile", logfile.getAbsoluteFilename());
+			result.set(LOGFILE, logfile.getAbsoluteFilename());
 		}
 
 		return result;

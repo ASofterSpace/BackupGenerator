@@ -25,7 +25,9 @@ public class Database {
 
 	private JSON root;
 
-	private List<TargetDrive> targets;
+	private List<TargetDrive> targetsFromFile;
+
+	private List<TargetDrive> templatedTargets;
 
 	private List<String> mountpoints;
 
@@ -44,10 +46,12 @@ public class Database {
 
 		List<Record> targetRecs = root.getArray(TARGETS);
 
-		this.targets = new ArrayList<>();
+		this.targetsFromFile = new ArrayList<>();
+		this.templatedTargets = new ArrayList<>();
 
 		for (Record rec : targetRecs) {
-			targets.add(new TargetDrive(rec));
+			this.targetsFromFile.add(new TargetDrive(rec));
+			this.templatedTargets.addAll(TargetDrive.createFromTemplate(rec));
 		}
 
 		mountpoints = root.getArrayAsStringList(MOUNTPOINTS);
@@ -63,7 +67,7 @@ public class Database {
 
 		List<Record> targetRecs = new ArrayList<>();
 
-		for (TargetDrive obj : targets) {
+		for (TargetDrive obj : targetsFromFile) {
 			targetRecs.add(obj.toRecord());
 		}
 
@@ -73,8 +77,9 @@ public class Database {
 		dbFile.save();
 	}
 
-	public List<TargetDrive> getTargets() {
-		return targets;
+	public List<TargetDrive> getTemplatedTargets() {
+
+		return templatedTargets;
 	}
 
 	public List<Directory> getDriveMountPoints() {
