@@ -16,6 +16,7 @@ import java.util.List;
 
 public class TargetDrive {
 
+	private static final String USE_AS_TEMPLATE_FOR = "useAsTemplateFor";
 	private static final String REPLACENAME = "%NAME%";
 	private static final String ACTIONS = "actions";
 	private static final String LOGFILE = "logfile";
@@ -23,6 +24,8 @@ public class TargetDrive {
 
 	// name is e.g. "hdd_13_1", which can then be searched for on each drive to identify such a drive
 	protected String name;
+
+	protected List<String> useAsTemplateFor;
 
 	protected List<Action> actions;
 
@@ -32,6 +35,8 @@ public class TargetDrive {
 	public TargetDrive(Record rec) {
 
 		this.name = rec.getString(NAME);
+
+		this.useAsTemplateFor = rec.getArrayAsStringList(USE_AS_TEMPLATE_FOR);
 
 		List<Record> actionRecs = rec.getArray(ACTIONS);
 		this.actions = new ArrayList<>();
@@ -49,6 +54,8 @@ public class TargetDrive {
 
 		this.name = other.name;
 
+		this.useAsTemplateFor = other.useAsTemplateFor;
+
 		this.actions = other.actions;
 
 		this.logfile = other.logfile;
@@ -56,7 +63,7 @@ public class TargetDrive {
 
 	public static List<TargetDrive> createFromTemplate(Record rec) {
 		List<TargetDrive> result = new ArrayList<>();
-		List<String> useAsTemplateFor = rec.getArrayAsStringList("useAsTemplateFor");
+		List<String> useAsTemplateFor = rec.getArrayAsStringList(USE_AS_TEMPLATE_FOR);
 		if ((useAsTemplateFor == null) || (useAsTemplateFor.size() < 1)) {
 			result.add(new TargetDrive(rec));
 		} else {
@@ -64,6 +71,7 @@ public class TargetDrive {
 				Record curRec = rec.createDeepCopy();
 				curRec.setString(NAME, StrUtils.replaceAll(curRec.getString(NAME), REPLACENAME, templateName));
 				curRec.setString(LOGFILE, StrUtils.replaceAll(curRec.getString(LOGFILE), REPLACENAME, templateName));
+				curRec.remove(USE_AS_TEMPLATE_FOR);
 				result.add(new TargetDrive(curRec));
 			}
 		}
@@ -86,6 +94,10 @@ public class TargetDrive {
 			result.set(LOGFILE, null);
 		} else {
 			result.set(LOGFILE, logfile.getAbsoluteFilename());
+		}
+
+		if ((useAsTemplateFor != null) && (useAsTemplateFor.size() > 0)) {
+			result.set(USE_AS_TEMPLATE_FOR, useAsTemplateFor);
 		}
 
 		return result;
