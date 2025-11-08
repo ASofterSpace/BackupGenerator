@@ -95,8 +95,8 @@ public class IntegrityCheckCtrl {
 						boolean checkedFile = false;
 						boolean curFoundProblems = false;
 						String lowpath = curChild.getPath().toLowerCase();
-						if (lowpath.endsWith("mp4") || lowpath.endsWith("avi") || lowpath.endsWith("mkv") ||
-							lowpath.endsWith("wmv") || lowpath.endsWith("mov") || lowpath.endsWith("mpeg")) {
+						if (lowpath.endsWith(".mp4") || lowpath.endsWith(".avi") || lowpath.endsWith(".mkv") ||
+							lowpath.endsWith(".wmv") || lowpath.endsWith(".mov") || lowpath.endsWith(".mpeg")) {
 							checkedFile = true;
 							videoAmount++;
 							if (!checkIndividualVideoFile(curChild)) {
@@ -104,8 +104,8 @@ public class IntegrityCheckCtrl {
 							}
 						}
 						// ffprobe seems to not work well for midi files, so we are not testing those
-						if (lowpath.endsWith("mp3") || lowpath.endsWith("wav") || lowpath.endsWith("ogg") ||
-							lowpath.endsWith("wma") || lowpath.endsWith("aac")) {
+						if (lowpath.endsWith(".mp3") || lowpath.endsWith(".wav") || lowpath.endsWith(".ogg") ||
+							lowpath.endsWith(".wma") || lowpath.endsWith(".aac")) {
 							checkedFile = true;
 							audioAmount++;
 							if (!checkIndividualAudioFile(curChild)) {
