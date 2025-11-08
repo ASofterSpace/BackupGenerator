@@ -153,7 +153,7 @@ public class BackupCtrl {
 			smiley = ":)";
 		}
 
-		OutputUtils.message("Backup run " + finalRunStr + "! " + smiley);
+		OutputUtils.println("Backup run " + finalRunStr + "! " + smiley);
 	}
 
 	private List<IdentifiedTarget> identifyTargets() {

@@ -5,6 +5,7 @@
 package com.asofterspace.backupGenerator;
 
 import com.asofterspace.backupGenerator.gui.GUI;
+import com.asofterspace.backupGenerator.integrityCheck.IntegrityCheckCtrl;
 import com.asofterspace.backupGenerator.output.OutputUtils;
 import com.asofterspace.toolbox.configuration.ConfigFile;
 import com.asofterspace.toolbox.gui.GuiUtils;
@@ -21,8 +22,8 @@ import javax.swing.SwingUtilities;
 public class BackupGenerator {
 
 	public final static String PROGRAM_TITLE = "BackupGenerator";
-	public final static String VERSION_NUMBER = "0.0.2.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "15. September 2020 - 5. November 2025";
+	public final static String VERSION_NUMBER = "0.0.2.3(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "15. September 2020 - 8. November 2025";
 
 	public final static String USE_STATUS_FILE = "useStatusFile";
 	public final static String STATUS_FILE_PATH = "statusFilePath";
@@ -96,21 +97,28 @@ public class BackupGenerator {
 
 		database.save();
 
-		OutputUtils.println("Creating backup ctrl...");
+		OutputUtils.println("Creating backupCtrl and integrityCheckCtrl...");
 
 		BackupCtrl backupCtrl = new BackupCtrl(database);
+		IntegrityCheckCtrl integrityCheckCtrl = new IntegrityCheckCtrl(database, config);
 
 		OutputUtils.println("Starting GUI...");
 
-		SwingUtilities.invokeLater(new GUI(backupCtrl, config));
+		SwingUtilities.invokeLater(new GUI(backupCtrl, integrityCheckCtrl, config));
 
 		while (!guiVisible) {
 			Utils.sleep(1000);
 		}
 
-		OutputUtils.println("Starting backup ctrl...");
+		OutputUtils.println("Starting backupCtrl...");
 
 		backupCtrl.start();
+
+		OutputUtils.println("Starting integrityCheckCtrl...");
+
+		integrityCheckCtrl.start();
+
+		OutputUtils.println(Utils.getProgramTitle() + " done!");
 	}
 
 	public static void setGuiVisible(boolean guiVisibleArg) {

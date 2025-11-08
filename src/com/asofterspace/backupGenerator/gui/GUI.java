@@ -6,6 +6,7 @@ package com.asofterspace.backupGenerator.gui;
 
 import com.asofterspace.backupGenerator.BackupCtrl;
 import com.asofterspace.backupGenerator.BackupGenerator;
+import com.asofterspace.backupGenerator.integrityCheck.IntegrityCheckCtrl;
 import com.asofterspace.backupGenerator.output.OutputUtils;
 import com.asofterspace.toolbox.configuration.ConfigFile;
 import com.asofterspace.toolbox.gui.Arrangement;
@@ -52,6 +53,8 @@ public class GUI extends MainWindow {
 
 	private BackupCtrl backupCtrl;
 
+	private IntegrityCheckCtrl integrityCheckCtrl;
+
 	private JMenuItem close;
 
 	private JLabel currentDirectoryLabel;
@@ -59,9 +62,11 @@ public class GUI extends MainWindow {
 	private ConfigFile configuration;
 
 
-	public GUI(BackupCtrl backupCtrl, ConfigFile config) {
+	public GUI(BackupCtrl backupCtrl, IntegrityCheckCtrl integrityCheckCtrl, ConfigFile config) {
 
 		this.backupCtrl = backupCtrl;
+
+		this.integrityCheckCtrl = integrityCheckCtrl;
 
 		this.configuration = config;
 
@@ -139,6 +144,7 @@ public class GUI extends MainWindow {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				backupCtrl.pause();
+				integrityCheckCtrl.pause();
 			}
 		});
 		file.add(pause);
@@ -148,6 +154,7 @@ public class GUI extends MainWindow {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				backupCtrl.resume();
+				integrityCheckCtrl.resume();
 			}
 		});
 		file.add(resume);
@@ -159,6 +166,7 @@ public class GUI extends MainWindow {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				backupCtrl.cancel();
+				integrityCheckCtrl.cancel();
 			}
 		});
 		file.add(cancel);

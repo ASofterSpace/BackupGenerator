@@ -52,7 +52,9 @@ public class OutputUtils {
 		if (isError) {
 			line = "[ERROR] " + line;
 		} else {
-			line = "[INFO] " + line;
+			if (!"".equals(line)) {
+				line = "[INFO] " + line;
+			}
 		}
 
 		if (errorMemo == null) {

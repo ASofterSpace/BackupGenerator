@@ -20,6 +20,7 @@ public class Database {
 	private static final String TARGETS = "targets";
 	private static final String MOUNTPOINTS = "mountpoints";
 	private static final String MOUNTPOINT_ANY = "%ANY%";
+	private static final String INTEGRITY_CHECK_DIRS = "integrityCheckDirs";
 
 	private JsonFile dbFile;
 
@@ -30,6 +31,8 @@ public class Database {
 	private List<TargetDrive> templatedTargets;
 
 	private List<String> mountpoints;
+
+	private List<String> integrityCheckDirs;
 
 
 	public Database() {
@@ -55,6 +58,8 @@ public class Database {
 		}
 
 		mountpoints = root.getArrayAsStringList(MOUNTPOINTS);
+
+		integrityCheckDirs = root.getArrayAsStringList(INTEGRITY_CHECK_DIRS);
 	}
 
 	public Record getRoot() {
@@ -66,12 +71,14 @@ public class Database {
 		root.makeObject();
 
 		List<Record> targetRecs = new ArrayList<>();
-
 		for (TargetDrive obj : targetsFromFile) {
 			targetRecs.add(obj.toRecord());
 		}
-
 		root.set(TARGETS, targetRecs);
+
+		root.set(MOUNTPOINTS, mountpoints);
+
+		root.set(INTEGRITY_CHECK_DIRS, integrityCheckDirs);
 
 		dbFile.setAllContents(root);
 		dbFile.save();
@@ -108,4 +115,9 @@ public class Database {
 		}
 		return result;
 	}
+
+	public List<String> getIntegrityCheckDirs() {
+		return integrityCheckDirs;
+	}
+
 }
