@@ -12,7 +12,6 @@ import com.asofterspace.toolbox.io.File;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -22,11 +21,11 @@ public class IntegrityCheckCtrl {
 	private ConfigFile config;
 	private String[] videoFileCheckCommandAndArgs = {null, null};
 
-	private List<File> videoFiles = new ArrayList<>();
-	private List<File> audioFiles = new ArrayList<>();
-
 	private volatile boolean paused = false;
 	private volatile boolean cancelled = false;
+	private boolean foundProblems = false;
+	private int videoAmount = 0;
+	private int audioAmount = 0;
 
 	private final String CANCEL_STR = "Integrity checking cancelled!";
 
@@ -53,109 +52,97 @@ public class IntegrityCheckCtrl {
 
 	public void start() {
 
-		OutputUtils.printerrln("", false);
-
 		List<String> directoryStrs = database.getIntegrityCheckDirs();
 
 		if ((directoryStrs != null) && (directoryStrs.size() > 0)) {
-			OutputUtils.printerrln("Integrity checks starting for directories:", false);
-			List<Directory> directories = new ArrayList<>();
+			videoAmount = 0;
+			audioAmount = 0;
+
 			for (String dirStr : directoryStrs) {
-				Directory curdir = new Directory(dirStr);
-				directories.add(curdir);
-				OutputUtils.printerrln(curdir.getCanonicalDirname(), false);
+				foundProblems = false;
+				Directory curDir = new Directory(dirStr);
+				OutputUtils.printerrln("", false);
+				OutputUtils.printerrln("Integrity checks starting for directory:", false);
+				OutputUtils.printerrln(curDir.getCanonicalDirname(), false);
+				checkDirectory(curDir.getJavaFile());
+				if (!foundProblems) {
+					OutputUtils.printerrln("All shiny! ^-^", false);
+				}
 			}
-			OutputUtils.printerrln("", false);
-			OutputUtils.printerrln("Results:", false);
-
-			videoFiles = new ArrayList<>();
-			audioFiles = new ArrayList<>();
-
-			OutputUtils.println("Gathering files for integrity checking...");
-			if (cancelled) {
-				OutputUtils.printerrln(CANCEL_STR, false);
-				return;
-			}
-
-			gatherFiles(directories);
-
-			int i = 0;
-			int j = 0;
-			OutputUtils.println("Integrity checking of " + videoFiles.size() + " videos (" +
-				i + " done) and " + audioFiles.size() + " audios (" + j + " done)...");
 
 			if (cancelled) {
 				OutputUtils.printerrln(CANCEL_STR, false);
 				return;
 			}
 
-			boolean foundProblems = false;
-
-			for (File videoFile : videoFiles) {
-				i++;
-				if (i % 64 == 0) {
-					OutputUtils.println("Integrity checking of " + videoFiles.size() + " videos (" +
-						i + " done) and " + audioFiles.size() + " audios (" + j + " done)...");
-				}
-				if (!checkIndividualVideoFile(videoFile)) {
-					foundProblems = true;
-					OutputUtils.printerrln(videoFile.getAbsoluteFilename() + " is broken!", true);
-				}
-				if (cancelled) {
-					OutputUtils.printerrln(CANCEL_STR, false);
-					return;
-				}
-			}
-			for (File audioFile : audioFiles) {
-				j++;
-				if (j % 64 == 0) {
-					OutputUtils.println("Integrity checking of " + videoFiles.size() + " videos (" +
-						i + " done) and " + audioFiles.size() + " audios (" + j + " done)...");
-				}
-				if (!checkIndividualAudioFile(audioFile)) {
-					foundProblems = true;
-					OutputUtils.printerrln(audioFile.getAbsoluteFilename() + " is broken!", true);
-				}
-				if (cancelled) {
-					OutputUtils.printerrln(CANCEL_STR, false);
-					return;
-				}
-			}
-			if (!foundProblems) {
-				OutputUtils.printerrln("All shiny! ^-^", false);
-			}
 			OutputUtils.printerrln("", false);
 			OutputUtils.printerrln("Integrity checks done!", false);
 		} else {
+			OutputUtils.printerrln("", false);
 			OutputUtils.printerrln("Skipping integrity checks, as none are defined!", false);
 		}
 	}
 
-	private void gatherFiles(List<Directory> directories) {
-		boolean recursively = true;
-		for (Directory curdir : directories) {
-			for (File curfile : curdir.getAllFiles(recursively)) {
-				String contentType = curfile.getContentType();
-				if (contentType.startsWith("video/")) {
-					this.videoFiles.add(curfile);
+	private void checkDirectory(java.io.File entryPoint) {
+
+		if (entryPoint.isDirectory()) {
+			java.io.File[] children = entryPoint.listFiles();
+			if (children != null) {
+				for (java.io.File curChild : children) {
+					if (curChild.isDirectory()) {
+						checkDirectory(curChild);
+					} else {
+						boolean checkedFile = false;
+						boolean curFoundProblems = false;
+						String lowpath = curChild.getPath().toLowerCase();
+						if (lowpath.endsWith("mp4") || lowpath.endsWith("avi") || lowpath.endsWith("mkv") ||
+							lowpath.endsWith("wmv") || lowpath.endsWith("mov") || lowpath.endsWith("mpeg")) {
+							checkedFile = true;
+							videoAmount++;
+							if (!checkIndividualVideoFile(curChild)) {
+								curFoundProblems = true;
+							}
+						}
+						if (lowpath.endsWith("mp3") || lowpath.endsWith("wav") || lowpath.endsWith("ogg") ||
+							lowpath.endsWith("wma") || lowpath.endsWith("mid") || lowpath.endsWith("midi") ||
+							lowpath.endsWith("aac")) {
+							checkedFile = true;
+							audioAmount++;
+							if (!checkIndividualAudioFile(curChild)) {
+								curFoundProblems = true;
+							}
+						}
+						// in the future, we could also add other files whose integrity we want to check
+
+						if (curFoundProblems) {
+							OutputUtils.printerrln(curChild.getAbsolutePath() + " is broken!", true);
+							foundProblems = true;
+						}
+						if (checkedFile) {
+							if ((videoAmount + audioAmount) % 16 == 0) {
+								OutputUtils.println("Integrity checking of " + videoAmount +
+									" video files and " + audioAmount + " audio files done...");
+							}
+						}
+					}
+
+					if (cancelled) {
+						return;
+					}
 				}
-				if (contentType.startsWith("audio/")) {
-					this.audioFiles.add(curfile);
-				}
-				// in the future, we could also add other files whose integrity we want to check
 			}
 		}
 	}
 
 	// returns true if the file is checked successfully, returns false if the file is broken
-	private boolean checkIndividualAudioFile(File audioFile) {
+	private boolean checkIndividualAudioFile(java.io.File audioFile) {
 		return checkIndividualVideoFile(audioFile);
 	}
 
 	// returns true if the file is checked successfully, returns false if the file is broken
-	private boolean checkIndividualVideoFile(File videoFile) {
+	private boolean checkIndividualVideoFile(java.io.File videoFile) {
 
-		videoFileCheckCommandAndArgs[1] = videoFile.getAbsoluteFilename();
+		videoFileCheckCommandAndArgs[1] = videoFile.getAbsolutePath();
 
 		try {
 			Process process = Runtime.getRuntime().exec(videoFileCheckCommandAndArgs);
