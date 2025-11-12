@@ -94,25 +94,29 @@ public class IntegrityCheckCtrl {
 					} else {
 						boolean checkedFile = false;
 						boolean curFoundProblems = false;
-						String lowpath = curChild.getPath().toLowerCase();
-						if (lowpath.endsWith(".mp4") || lowpath.endsWith(".avi") || lowpath.endsWith(".mkv") ||
-							lowpath.endsWith(".wmv") || lowpath.endsWith(".mov") || lowpath.endsWith(".mpeg")) {
-							checkedFile = true;
-							videoAmount++;
-							if (!checkIndividualVideoFile(curChild)) {
-								curFoundProblems = true;
+						if (!checkIndividualGenericFile(curChild)) {
+							curFoundProblems = true;
+						} else {
+							String lowpath = curChild.getPath().toLowerCase();
+							if (lowpath.endsWith(".mp4") || lowpath.endsWith(".avi") || lowpath.endsWith(".mkv") ||
+								lowpath.endsWith(".wmv") || lowpath.endsWith(".mov") || lowpath.endsWith(".mpeg")) {
+								checkedFile = true;
+								videoAmount++;
+								if (!checkIndividualVideoFile(curChild)) {
+									curFoundProblems = true;
+								}
 							}
-						}
-						// ffprobe seems to not work well for midi files, so we are not testing those
-						if (lowpath.endsWith(".mp3") || lowpath.endsWith(".wav") || lowpath.endsWith(".ogg") ||
-							lowpath.endsWith(".wma") || lowpath.endsWith(".aac")) {
-							checkedFile = true;
-							audioAmount++;
-							if (!checkIndividualAudioFile(curChild)) {
-								curFoundProblems = true;
+							// ffprobe seems to not work well for midi files, so we are not testing those
+							if (lowpath.endsWith(".mp3") || lowpath.endsWith(".wav") || lowpath.endsWith(".ogg") ||
+								lowpath.endsWith(".wma") || lowpath.endsWith(".aac")) {
+								checkedFile = true;
+								audioAmount++;
+								if (!checkIndividualAudioFile(curChild)) {
+									curFoundProblems = true;
+								}
 							}
+							// in the future, we could also add other files whose integrity we want to check
 						}
-						// in the future, we could also add other files whose integrity we want to check
 
 						if (curFoundProblems) {
 							OutputUtils.printerrln(curChild.getAbsolutePath() + " is broken!", true);
@@ -132,6 +136,12 @@ public class IntegrityCheckCtrl {
 				}
 			}
 		}
+	}
+
+	// returns true if the file is checked successfully, returns false if the file is broken
+	private boolean checkIndividualGenericFile(java.io.File genericFile) {
+		// we just check if the file has length bigger than zero
+		return genericFile.length() > 0;
 	}
 
 	// returns true if the file is checked successfully, returns false if the file is broken

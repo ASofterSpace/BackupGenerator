@@ -102,7 +102,7 @@ public class GUI extends MainWindow {
 				// Stage everything to be shown
 				mainFrame.pack();
 
-				// Actually display the whole jazz
+				// now display the whole jazz
 				mainFrame.setVisible(true);
 
 				if ((lastWidth < 1) || (lastHeight < 1)) {

@@ -200,8 +200,8 @@ public class BackupCtrl {
 		for (String sourcePath : sourcePaths) {
 
 			// we are listing the sources for this sync or write action, and for each source, we check
-			// if the name is like [hdd_12_1]\\blubb (actual), so starting with [target], in which case
-			// we try to resolve that target to an actual directory path
+			// if the name is like [hdd_12_1]\\blubb (...), so starting with [target], in which case
+			// we try to resolve that target to a real directory path
 			if (sourcePath.startsWith("[")) {
 				sourcePath = sourcePath.substring(1);
 				if (!sourcePath.contains("]")) {
@@ -224,7 +224,7 @@ public class BackupCtrl {
 				}
 			}
 
-			// actually add the source to the list of sources that we will use
+			// add the source to the list of sources that we will use
 			sources.add(new Directory(sourcePath));
 			fromStr += sep + sourcePath;
 			sep = " and ";
@@ -248,17 +248,24 @@ public class BackupCtrl {
 		Directory destination = null;
 		Directory renameDestination = null;
 
-		Directory destinationWithActualQualifier = new Directory(destinationParent, action.getDestinationName() +
-			" (actual)");
+		String[] qualifiers = {"actual", "some", "external"};
 
-		if (destinationWithActualQualifier.exists()) {
+		for (String qualifier : qualifiers) {
 
-			destination = destinationWithActualQualifier;
+			Directory destinationWithQualifier = new Directory(destinationParent, action.getDestinationName() +
+				" (" + qualifier + ")");
 
-			OutputUtils.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
-				destination.getAbsoluteDirname() + " (ignoring replication factor for \"(actual)\" destionations)...");
+			if (destinationWithQualifier.exists()) {
 
-		} else {
+				destination = destinationWithQualifier;
+
+				OutputUtils.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
+					destination.getAbsoluteDirname() + " (ignoring replication factor for \"(" + qualifier + ")\" destionations)...");
+				break;
+			}
+		}
+
+		if (destination == null) {
 
 			OutputUtils.println("  Starting " + action.getKind() + " from " + fromStr + " to " +
 				destinationParent.getCanonicalDirname() + " > " + action.getDestinationName() +
@@ -423,7 +430,7 @@ public class BackupCtrl {
 				}
 			}
 
-			// actually backup this file
+			// really backup this file
 			java.io.File destinationFile = destFile.getJavaFile();
 
 			// create parent directories
@@ -513,7 +520,7 @@ public class BackupCtrl {
 					}
 
 					if (!allFine) {
-						// ... and in case of another failure, actually complain about it!
+						// ... and in case of another failure, really do complain about it!
 						OutputUtils.printerrln("The file " + sourceFile.getAbsoluteFilename() + " could not be copied to " +
 							destFile.getAbsoluteFilename() + " due to first " + toOneLine(e1) + " and then " + toOneLine(e2) +
 							" in the second attempt!", true);
@@ -522,7 +529,7 @@ public class BackupCtrl {
 			}
 		}
 
-		// we actually sync
+		// we really sync
 		boolean sync = "sync".equals(kind);
 
 		// we don't sync, but we log output to see what would be done if we would sync

@@ -8,8 +8,8 @@ import com.asofterspace.toolbox.io.Directory;
 
 
 /**
- * This is a target drive which has actually been found currently connected
- * to this computer and can be used as backup target
+ * This is a target drive which has already been identified as currently connected
+ * to this computer and able to be used as backup target
  */
 public class IdentifiedTarget extends TargetDrive {
 

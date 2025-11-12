@@ -22,8 +22,8 @@ import javax.swing.SwingUtilities;
 public class BackupGenerator {
 
 	public final static String PROGRAM_TITLE = "BackupGenerator";
-	public final static String VERSION_NUMBER = "0.0.2.3(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "15. September 2020 - 8. November 2025";
+	public final static String VERSION_NUMBER = "0.0.2.4(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "15. September 2020 - 13. November 2025";
 
 	public final static String USE_STATUS_FILE = "useStatusFile";
 	public final static String STATUS_FILE_PATH = "statusFilePath";
