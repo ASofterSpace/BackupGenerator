@@ -94,8 +94,10 @@ public class IntegrityCheckCtrl {
 					} else {
 						boolean checkedFile = false;
 						boolean curFoundProblems = false;
+						String problemStr = " is broken!";
 						if (!checkIndividualGenericFile(curChild)) {
 							curFoundProblems = true;
+							problemStr = " is empty!";
 						} else {
 							String lowpath = curChild.getPath().toLowerCase();
 							if (lowpath.endsWith(".mp4") || lowpath.endsWith(".avi") || lowpath.endsWith(".mkv") ||
@@ -119,7 +121,7 @@ public class IntegrityCheckCtrl {
 						}
 
 						if (curFoundProblems) {
-							OutputUtils.printerrln(curChild.getAbsolutePath() + " is broken!", true);
+							OutputUtils.printerrln(curChild.getAbsolutePath() + problemStr, true);
 							foundProblems = true;
 						}
 						if (checkedFile) {
@@ -140,8 +142,23 @@ public class IntegrityCheckCtrl {
 
 	// returns true if the file is checked successfully, returns false if the file is broken
 	private boolean checkIndividualGenericFile(java.io.File genericFile) {
-		// we just check if the file has length bigger than zero
-		return genericFile.length() > 0;
+		// if the file length is at (or below ^^) zero...
+		if (genericFile.length() <= 0) {
+			// ... and if the file name is not one that we ignore ...
+			switch (genericFile.getName()) {
+				case ".nomedia":
+				case "write.lock":
+				case ".lock":
+				case ".fileTableLock":
+				case ".gitkeep":
+				case "__init__.py":
+					return true;
+				default:
+					// ... then return the error code!
+					return false;
+			}
+		}
+		return true;
 	}
 
 	// returns true if the file is checked successfully, returns false if the file is broken
