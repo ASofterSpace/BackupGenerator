@@ -331,7 +331,7 @@ public class BackupCtrl {
 			}
 		}
 
-		performAction(action.getKind(), sources, destination, "", action.getIndexRemoteFiles(), action.getIgnore(), 0);
+		long fileCounter = performAction(action.getKind(), sources, destination, "", action.getIndexRemoteFiles(), action.getIgnore(), 0);
 
 		if (cancelled) {
 			return "cancelled";
@@ -342,7 +342,7 @@ public class BackupCtrl {
 			destination.rename(renameDestination.getLocalDirname());
 		}
 
-		return destination.getLocalDirname();
+		return destination.getLocalDirname() + " (" + fileCounter + " files)";
 	}
 
 	private long performAction(String kind, List<Directory> sources, Directory destination,
