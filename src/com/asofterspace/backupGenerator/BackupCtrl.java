@@ -195,9 +195,16 @@ public class BackupCtrl {
 		}
 
 		List<Directory> sources = new ArrayList<>();
+		String sourceLogStr = null;
 		String fromStr = "";
 		String sep = "";
 		for (String sourcePath : sourcePaths) {
+
+			if (sourceLogStr == null) {
+				sourceLogStr = sourcePath;
+			} else {
+				sourceLogStr += " and " + sourcePath;
+			}
 
 			// we are listing the sources for this sync or write action, and for each source, we check
 			// if the name is like [hdd_12_1]\\blubb (...), so starting with [target], in which case
@@ -222,6 +229,8 @@ public class BackupCtrl {
 					OutputUtils.println("  SOURCE NOT FOUND: [" + sourceName + "]!");
 					return destinationParent.getAbsoluteDirname() + " (source [" + sourceName + "] not found!)";
 				}
+
+				sourceLogStr += " (resolved to " + sourcePath + ")";
 			}
 
 			// add the source to the list of sources that we will use
@@ -342,7 +351,8 @@ public class BackupCtrl {
 			destination.rename(renameDestination.getLocalDirname());
 		}
 
-		return destination.getLocalDirname() + " (" + fileCounter + " files)";
+		// return log line for the log file
+		return destination.getLocalDirname() + " from " + sourceLogStr + " containing " + fileCounter + " files";
 	}
 
 	private long performAction(String kind, List<Directory> sources, Directory destination,
