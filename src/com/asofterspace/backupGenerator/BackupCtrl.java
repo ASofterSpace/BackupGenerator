@@ -629,9 +629,21 @@ public class BackupCtrl {
 		}
 		// System.out.println("DEBUG childDirs: [" + StrUtils.join(",", childDirs) + "]");
 
+		List<String> childDirRelPathsAlreadyEncountered = new ArrayList<>();
 		for (Directory childDir : childDirs) {
+			// ensure we use every relative path just once
+			// (when we have several sources they might contain the same folders but with different
+			// or missing contents, in which case we would otherwise go over the same relative paths
+			// multiple times, which we want to avoid as it is unnecessary work and confuses the
+			// logged stats)
+			String childDirRelPath = curRelPath + childDir.getLocalDirname() + "/";
+			if (childDirRelPathsAlreadyEncountered.contains(childDirRelPath)) {
+				continue;
+			}
+			childDirRelPathsAlreadyEncountered.add(childDirRelPath);
+
 			// set ignore to null as we only want to ignore top-level directories
-			performAction(kind, sources, destination, curRelPath + childDir.getLocalDirname() + "/", false, null);
+			performAction(kind, sources, destination, childDirRelPath, false, null);
 
 			boolean didPause = false;
 			while (paused) {
