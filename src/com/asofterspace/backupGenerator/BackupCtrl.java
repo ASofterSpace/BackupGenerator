@@ -561,9 +561,9 @@ public class BackupCtrl {
 
 			if (reportAllActions) {
 				if (sync) {
-					OutputUtils.println("    syncing files...");
+					OutputUtils.println("    " + getCounterDisplayStr() + "syncing files...");
 				} else {
-					OutputUtils.println("    output-as-if-syncing files...");
+					OutputUtils.println("    " + getCounterDisplayStr() + "output-as-if-syncing files...");
 				}
 			}
 
@@ -667,9 +667,9 @@ public class BackupCtrl {
 
 			if (reportAllActions) {
 				if (sync) {
-					OutputUtils.println("    syncing directories...");
+					OutputUtils.println("    " + getCounterDisplayStr() + "syncing directories...");
 				} else {
-					OutputUtils.println("    output-as-if-syncing directories...");
+					OutputUtils.println("    " + getCounterDisplayStr() + "output-as-if-syncing directories...");
 				}
 			}
 
@@ -817,7 +817,7 @@ public class BackupCtrl {
 	}
 
 	private String getCounterDisplayStr() {
-		return "amount: " + fileCountTracker + ", size: " + StrUtils.longToHumanReadableBytes(fileSizeTracker) + " :: ";
+		return fileCountTracker + " done ( " + StrUtils.longToHumanReadableBytes(fileSizeTracker) + "), now ";
 	}
 
 }

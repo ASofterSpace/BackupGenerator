@@ -145,15 +145,22 @@ public class IntegrityCheckCtrl {
 		// if the file length is at (or below ^^) zero...
 		if (genericFile.length() <= 0) {
 			// ... and if the file name is not one that we ignore ...
-			switch (genericFile.getName()) {
+			String fileName = genericFile.getName();
+			switch (fileName) {
 				case ".nomedia":
-				case "write.lock":
 				case ".lock":
+				case "db.lock":
+				case "write.lock":
 				case ".fileTableLock":
+				case ".keep":
 				case ".gitkeep":
 				case "__init__.py":
 					return true;
 				default:
+					if (fileName.endsWith(".tlog") || fileName.endsWith(".log") ||
+						fileName.endsWith(".unsuccessfulbuild")) {
+						return true;
+					}
 					// ... then return the error code!
 					return false;
 			}
