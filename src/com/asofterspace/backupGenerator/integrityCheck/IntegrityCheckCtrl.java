@@ -12,6 +12,7 @@ import com.asofterspace.toolbox.io.File;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 
@@ -90,7 +91,9 @@ public class IntegrityCheckCtrl {
 			if (children != null) {
 				for (java.io.File curChild : children) {
 					if (curChild.isDirectory()) {
-						checkDirectory(curChild);
+						if (!Files.isSymbolicLink(Paths.get(curChild.getAbsolutePath()))) {
+							checkDirectory(curChild);
+						}
 					} else {
 						boolean checkedFile = false;
 						boolean curFoundProblems = false;

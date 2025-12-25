@@ -286,7 +286,8 @@ public class BackupCtrl {
 				" with replication factor " + replicationFactor + "...");
 
 			boolean recursively = false;
-			List<Directory> destDirs = destinationParent.getAllDirectories(recursively);
+			boolean followSymLinks = false;
+			List<Directory> destDirs = destinationParent.getAllDirectories(recursively, followSymLinks);
 			List<Directory> existingDestDirs = new ArrayList<>();
 			for (Directory destDir : destDirs) {
 				if (destDir.getLocalDirname().startsWith(action.getDestinationName() + " (")) {
@@ -386,18 +387,17 @@ public class BackupCtrl {
 
 		curDestination.create();
 
-		boolean recursively = true;
-
-		recursively = false;
+		boolean recursively = false;
+		boolean followSymLinks = false;
 
 		List<File> childFiles = new ArrayList<>();
 		for (Directory curSource : curSources) {
 			if ((ignore == null) || (ignore.size() < 1)) {
-				// System.out.println("DEBUBfiles1");
-				childFiles.addAll(curSource.getAllFiles(recursively));
+				// System.out.println("DEBUGfiles1");
+				childFiles.addAll(curSource.getAllFiles(recursively, followSymLinks));
 			} else {
 				// System.out.println("DEBUGfiles2");
-				for (File childFile : curSource.getAllFiles(recursively)) {
+				for (File childFile : curSource.getAllFiles(recursively, followSymLinks)) {
 					if (!ignore.contains(childFile.getLocalFilename())) {
 						childFiles.add(childFile);
 					}
@@ -568,7 +568,7 @@ public class BackupCtrl {
 			}
 
 			// in case of sync, delete files in the destination which are not in the source
-			List<File> destChildren = curDestination.getAllFiles(recursively);
+			List<File> destChildren = curDestination.getAllFiles(recursively, followSymLinks);
 
 			List<String> sourceLocalFilenames = new ArrayList<>();
 
@@ -617,10 +617,10 @@ public class BackupCtrl {
 		for (Directory curSource : curSources) {
 			if ((ignore == null) || (ignore.size() < 1)) {
 				// System.out.println("DEBUGdirs1");
-				childDirs.addAll(curSource.getAllDirectories(recursively));
+				childDirs.addAll(curSource.getAllDirectories(recursively, followSymLinks));
 			} else {
 				// System.out.println("DEBUGdirs2");
-				for (Directory childDir : curSource.getAllDirectories(recursively)) {
+				for (Directory childDir : curSource.getAllDirectories(recursively, followSymLinks)) {
 					if (!ignore.contains(childDir.getLocalDirname())) {
 						childDirs.add(childDir);
 					}
@@ -663,7 +663,7 @@ public class BackupCtrl {
 
 		if (sync || outputAsIfSync) {
 			// in case of sync, delete child directories in the destination which are not in the source
-			List<Directory> destChildren = curDestination.getAllDirectories(recursively);
+			List<Directory> destChildren = curDestination.getAllDirectories(recursively, followSymLinks);
 
 			if (reportAllActions) {
 				if (sync) {
@@ -716,13 +716,14 @@ public class BackupCtrl {
 
 		if (indexRemoteFiles) {
 			recursively = false;
-			List<Directory> destDirs = curDestination.getAllDirectories(recursively);
+			followSymLinks = false;
+			List<Directory> destDirs = curDestination.getAllDirectories(recursively, followSymLinks);
 
 			recursively = true;
 			String INDEX_FILE_NAME = "remote_index.txt";
 
 			for (Directory destDir : destDirs) {
-				List<File> destFiles = destDir.getAllFiles(recursively);
+				List<File> destFiles = destDir.getAllFiles(recursively, followSymLinks);
 				String dirName = destDir.getCanonicalDirname();
 				List<String> indexContentList = new ArrayList<>();
 				for (File destFile : destFiles) {
